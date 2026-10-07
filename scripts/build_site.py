@@ -93,13 +93,17 @@ if __name__ == "__main__":
     pts, goals = sims["points"][:, k], sims["gf"][:, k]
     champions = pd.Series(np.array(sims["teams"])[np.argmax(sims["position"] == 1, axis=1)]).value_counts(normalize=True)
 
+    # Classificação atual: pontos, diferença de golos, golos marcados (La Liga desempata
+    # primeiro pelo confronto direto; com poucos jogos a diferença é rara).
     current = table(played)
+    position = {t: i + 1 for i, t in enumerate(current.index)}
     rows = []
-    for _, r in s.iterrows():
+    for proj_rank, (_, r) in enumerate(s.iterrows(), start=1):
         t = r["team"]
         rows.append({
-            "team": name(t), "barca": t == TEAM, "points_now": int(current.loc[t, "points"]),
-            "played": int(current.loc[t, "played"]), "gd": int(current.loc[t, "gd"]),
+            "team": name(t), "barca": t == TEAM, "pos_now": position[t], "proj_rank": proj_rank,
+            "points_now": int(current.loc[t, "points"]), "played": int(current.loc[t, "played"]),
+            "gd": int(current.loc[t, "gd"]), "gf": int(current.loc[t, "gf"]),
             "exp_points": round(r["pontos_esperados"], 1),
             "p5": float(r["pontos_p5"]), "p95": float(r["pontos_p95"]),
             "p_title": round(r["p_titulo"], 4), "p_top4": round(r["p_top4"], 4), "p_releg": round(r["p_descida"], 4),

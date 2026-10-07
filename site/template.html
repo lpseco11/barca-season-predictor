@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Barça 26/27</title>
-<meta name="description" content="Previsões semanais para o FC Barcelona em La Liga 2026/27: modelo Dixon-Coles e 10 000 simulações da época.">
+<title>Barcelona 26/27</title>
+<meta name="description" content="Previsões semanais para o Barcelona em La Liga 2026/27, com um modelo Dixon-Coles e 10 000 simulações da época.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet">
@@ -145,6 +145,20 @@ section > .prose p { margin: 0 0 1rem; color: var(--ink-2); }
 .chart .ax { stroke: var(--rule); }
 .chart .lab-strong { fill: var(--ink); font-weight: 650; }
 
+/* Fotografias */
+.photo { margin: 4rem 0 0; }
+.photo img { display: block; width: 100%; height: auto; aspect-ratio: 1600 / 666; object-fit: cover; border-radius: 6px; background: var(--track); }
+.photo figcaption { margin-top: .5rem; color: var(--muted); font-size: .82rem; }
+section .photo { margin-top: 1.75rem; }
+
+/* Ordenação */
+.sorter { display: inline-flex; margin-top: 1.5rem; border: 1px solid var(--rule); border-radius: 6px; padding: 3px; background: var(--surface); gap: 3px; }
+.sorter button { font: inherit; font-size: .92rem; min-height: 44px; padding: 0 1rem; border: 0; border-radius: 4px; background: transparent; color: var(--ink-2); cursor: pointer; }
+.sorter button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+.sorter button:hover:not([aria-pressed="true"]) { background: var(--track); }
+.sorter + .table-scroll { margin-top: .75rem; }
+th.sep, td.sep { border-left: 1px solid var(--rule); }
+
 /* Tabela */
 .table-scroll { overflow-x: auto; margin-top: 1.75rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
 table { border-collapse: collapse; width: 100%; min-width: 44rem; font-size: .95rem; }
@@ -216,7 +230,7 @@ footer { margin-top: 5rem; padding-top: 1.25rem; border-top: 1px solid var(--rul
 <body>
 <div class="wrap">
   <header class="masthead">
-    <p class="wordmark">Barça 26/27 <span>previsões</span></p>
+    <p class="wordmark">Barcelona 26/27 <span>previsões</span></p>
     <p class="updated" id="updated"></p>
   </header>
 
@@ -225,17 +239,24 @@ footer { margin-top: 5rem; padding-top: 1.25rem; border-top: 1px solid var(--rul
       <h1 id="headline"></h1>
       <div class="stripes" id="stripes" role="img"></div>
       <ul class="stripe-legend" id="stripe-legend"></ul>
-      <p class="stripe-note">Cada risca é uma de 100 épocas simuladas, colorida com o campeão dessa época.</p>
+      <p class="stripe-note">Cada risca é uma época simulada, com a cor do campeão.</p>
       <dl class="facts" id="facts"></dl>
     </div>
 
+    <figure class="photo">
+      <img src="img/stands-1600.webp" srcset="img/stands-800.webp 800w, img/stands-1600.webp 1600w" sizes="(max-width: 68rem) 100vw, 68rem"
+           width="1600" height="666" loading="lazy" decoding="async"
+           alt="Bancadas do Camp Nou vazias, com a frase «Més que un club» escrita a amarelo nos lugares azuis">
+      <figcaption>Camp Nou, 2014. Foto de <a href="https://commons.wikimedia.org/wiki/File:2014._Camp_Nou._M%C3%A9s_que_un_club._Barcelona_B40.jpg">Luis Miguel Bugallo Sánchez</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>, recortada.</figcaption>
+    </figure>
+
     <section id="goleadas">
-      <h2>As goleadas são reais ou é sorte?</h2>
+      <h2>As goleadas são para durar?</h2>
       <div class="prose" id="goleadas-text"></div>
       <div class="duo">
         <div class="panel">
           <h3>Golos marcados</h3>
-          <p class="sub">Por jogo, comparados com o xG criado</p>
+          <p class="sub">Golos e xG em cada jogo</p>
           <ul class="key" aria-hidden="true">
             <li><svg width="10" height="10"><circle cx="5" cy="5" r="4.5" fill="var(--s1)"/></svg>Golos</li>
             <li><svg width="10" height="10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/></svg>xG</li>
@@ -244,7 +265,7 @@ footer { margin-top: 5rem; padding-top: 1.25rem; border-top: 1px solid var(--rul
         </div>
         <div class="panel">
           <h3>Golos sofridos</h3>
-          <p class="sub">Por jogo, comparados com o xG concedido</p>
+          <p class="sub">Golos sofridos e xG do adversário em cada jogo</p>
           <ul class="key" aria-hidden="true">
             <li><svg width="10" height="10"><circle cx="5" cy="5" r="4.5" fill="var(--ink-2)"/></svg>Golos</li>
             <li><svg width="10" height="10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/></svg>xG</li>
@@ -255,25 +276,35 @@ footer { margin-top: 5rem; padding-top: 1.25rem; border-top: 1px solid var(--rul
     </section>
 
     <section id="tabela">
-      <h2>Como pode acabar a época</h2>
-      <div class="prose"><p>Pontos esperados de cada equipa no fim das 38 jornadas. A barra mostra o intervalo onde caem 90% das simulações: quanto mais larga, mais incerto.</p></div>
+      <h2>Classificação e projeção</h2>
+      <div class="prose"><p>À esquerda, a classificação de hoje. À direita, como a época pode acabar: os pontos médios nas simulações e o intervalo onde ficam 90% delas. Quanto mais larga a barra, maior a incerteza.</p></div>
+      <div class="sorter" role="group" aria-label="Ordenar a tabela">
+        <button type="button" data-sort="now" aria-pressed="true">Classificação atual</button>
+        <button type="button" data-sort="proj" aria-pressed="false">Projeção final</button>
+      </div>
       <div class="table-scroll"><table id="table"></table></div>
     </section>
 
     <section id="evolucao">
-      <h2>Probabilidade de título, semana a semana</h2>
-      <div class="prose"><p>Depois de cada jornada o modelo é treinado de novo com os resultados mais recentes e a época volta a ser simulada.</p></div>
+      <h2>Hipóteses de título, jornada a jornada</h2>
+      <div class="prose"><p>Depois de cada jornada, o modelo volta a ser treinado com os resultados novos e a época é simulada outra vez.</p></div>
       <div class="panel"><div class="chart" id="chart-history"></div></div>
     </section>
 
     <section id="jornada">
       <h2 id="jornada-title">Próxima jornada</h2>
-      <div class="prose"><p>As previsões são feitas antes do primeiro jogo e guardadas no repositório com data e hora, para poderem ser verificadas depois.</p></div>
+      <div class="prose"><p>As previsões ficam guardadas no repositório antes do primeiro jogo, com data e hora, para se poder confirmar depois se acertaram.</p></div>
+      <figure class="photo">
+        <img src="img/kickoff-1600.webp" srcset="img/kickoff-800.webp 800w, img/kickoff-1600.webp 1600w" sizes="(max-width: 68rem) 100vw, 68rem"
+             width="1600" height="666" loading="lazy" decoding="async"
+             alt="As duas equipas alinhadas junto ao círculo central do Camp Nou antes do pontapé de saída, com o árbitro ao lado">
+        <figcaption>Barcelona–Mallorca, outubro de 2010. Foto de <a href="https://commons.wikimedia.org/wiki/File:LFP_-_Barcelona_vs_Mallorca_pre-match_-_Oct_3rd_2010.jpg">Paolo Costa Baldi</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>, recortada.</figcaption>
+      </figure>
       <div id="games"></div>
     </section>
 
     <section id="confianca">
-      <h2>Podes confiar no modelo?</h2>
+      <h2>O modelo acerta?</h2>
       <div class="prose" id="confianca-text"></div>
       <div class="duo">
         <div class="panel">
@@ -283,7 +314,7 @@ footer { margin-top: 5rem; padding-top: 1.25rem; border-top: 1px solid var(--rul
         </div>
         <div class="panel">
           <h3>Calibração</h3>
-          <p class="sub">Probabilidade prevista contra a frequência real. Na linha diagonal, o modelo estaria perfeito.</p>
+          <p class="sub">Probabilidade prevista e frequência real. Se o modelo fosse perfeito, os pontos ficavam em cima da diagonal.</p>
           <div class="chart" id="chart-calib"></div>
         </div>
       </div>
@@ -292,17 +323,17 @@ footer { margin-top: 5rem; padding-top: 1.25rem; border-top: 1px solid var(--rul
     <section id="metodo">
       <h2>Como funciona</h2>
       <ol class="steps">
-        <li><b>Dados</b>Resultados, remates, xG e odds de La Liga e da Segunda desde 2021, de football-data.co.uk.</li>
-        <li><b>Modelo</b>Dixon-Coles: cada equipa tem uma força de ataque e uma de defesa. Os jogos recentes pesam mais; um jogo de há um ano vale metade.</li>
-        <li><b>Simulação</b>Os jogos que faltam são sorteados 10 000 vezes, com forças ligeiramente diferentes em cada época para refletir a incerteza.</li>
-        <li><b>Validação</b>O modelo foi testado em três épocas completas, prevendo cada semana só com os jogos anteriores, e comparado com as casas de apostas.</li>
+        <li><b>Dados</b>Resultados, remates, xG e odds de La Liga e da Segunda Divisão desde 2021/22, de football-data.co.uk.</li>
+        <li><b>Modelo</b>Um modelo Dixon-Coles dá a cada equipa uma força de ataque e outra de defesa. Os jogos recentes contam mais: um jogo com um ano conta metade.</li>
+        <li><b>Simulação</b>Os jogos que faltam são simulados 10 000 vezes. Em cada simulação, as forças variam um pouco, porque as estimativas têm margem de erro.</li>
+        <li><b>Validação</b>Antes de ser usado, o modelo previu três épocas completas, semana a semana, só com os jogos já disputados. Os resultados foram comparados com as casas de apostas.</li>
       </ol>
     </section>
   </main>
 
   <footer>
     <span>Código e previsões no <a href="https://github.com/lpseco11/barca-season-predictor">GitHub</a>.</span>
-    <span>Dados: <a href="https://www.football-data.co.uk/">football-data.co.uk</a></span>
+    <span>Dados de <a href="https://www.football-data.co.uk/">football-data.co.uk</a>. Fotografias do Wikimedia Commons, com os créditos junto a cada uma.</span>
   </footer>
 </div>
 <div class="tip" id="tip" role="tooltip"></div>
@@ -367,8 +398,8 @@ function bindTip(node, html) {
 /* Cabeçalho e título */
 const barcaTitle = (DATA.title.find(t => t.barca) || { p: 0 }).p;
 const inHundred = Math.round(barcaTitle * 100);
-$("updated").textContent = `Atualizado a ${fmtDate(DATA.updated)}, com os jogos até à jornada ${DATA.matchday}`;
-$("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 épocas simuladas`;
+$("updated").textContent = `Atualizado a ${fmtDate(DATA.updated)}, com os jogos até à ${DATA.matchday}.ª jornada`;
+$("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão em ${inHundred}`;
 
 /* Riscas: 100 épocas, repartidas pelo maior resto */
 (function stripes() {
@@ -391,7 +422,7 @@ $("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 é
       const r = el("rect", { x: i * w + gap / 2, y: 0, width: w - gap, height: 200, fill, style: `--i:${i}` }, svg);
       rects.push(r);
     }
-    const html = `<b>${g.team}</b><br>campeão em ${g.n} de 100 épocas`;
+    const html = `<b>${g.team}</b><br>campeão em ${g.n} das 100 épocas`;
     rects.forEach(r => {
       bindTip(r, html);
       r.addEventListener("pointerenter", () => { box.classList.add("dim"); rects.forEach(x => x.classList.add("on")); });
@@ -412,9 +443,9 @@ $("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 é
 (function facts() {
   const b = DATA.barca;
   const items = [
-    [`${Math.round(b.exp_points)}`, `pontos esperados no fim da época. Em 90% das simulações, entre ${Math.round(b.p5)} e ${Math.round(b.p95)}.`],
-    [pct(b.p_100), `de probabilidade de chegar aos 100 pontos, o recorde da liga.`],
-    [pct(b.p_goal_record), `de bater os 121 golos do Real Madrid de 2011/12. A média projetada é de ${b.exp_goals} golos.`],
+    [`${Math.round(b.exp_points)}`, `pontos no final da época, em média. Em 90% das simulações, o Barcelona fica entre ${Math.round(b.p5)} e ${Math.round(b.p95)}.`],
+    [pct(b.p_100), `de hipóteses de chegar aos 100 pontos, o recorde de La Liga.`],
+    [pct(b.p_goal_record), `de hipóteses de passar os 121 golos do Real Madrid de 2011/12. Em média, as simulações dão-lhe ${b.exp_goals}.`],
   ];
   const dl = $("facts");
   items.forEach(([n, t]) => {
@@ -431,11 +462,11 @@ $("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 é
   const gf = sum("gf"), xgf = sum("xgf"), ga = sum("ga"), xga = sum("xga");
   const diff = gf - xgf;
   const verdict = Math.abs(diff) < 0.15 * xgf
-    ? `A diferença é pequena: as goleadas vêm de criar muitas oportunidades, não de uma eficácia fora do normal. É o tipo de domínio que costuma manter-se.`
+    ? `Marca pouco mais do que as ocasiões criadas fariam prever. As goleadas vêm sobretudo de criar muitas ocasiões em cada jogo, e isso costuma manter-se ao longo de uma época.`
     : diff > 0
-      ? `Marca bastante mais do que o xG sugere. Parte das goleadas pode ser eficácia acima do normal, que tende a baixar.`
-      : `Marca menos do que o xG sugere: o domínio é maior do que os resultados mostram.`;
-  $("goleadas-text").innerHTML = `<p>O xG (golos esperados) mede a qualidade das oportunidades: um remate com xG 0,3 dá golo 3 vezes em 10. Em ${ms.length} jogos o Barça marcou ${gf} golos com ${nf1.format(xgf)} de xG, e sofreu ${ga} com ${nf1.format(xga)} de xG contra.</p><p>${verdict}</p>`;
+      ? `Marca bem mais do que o xG faria prever. Parte das goleadas deve-se a uma eficácia acima do normal, que costuma baixar com o tempo.`
+      : `Marca menos do que o xG faria prever, por isso os resultados ainda ficam aquém do que a equipa cria.`;
+  $("goleadas-text").innerHTML = `<p>O xG (golos esperados) mede a qualidade das ocasiões: um remate com 0,3 de xG dá golo três vezes em cada dez. Em ${ms.length} jogos, o Barcelona marcou ${gf} golos para ${nf1.format(xgf)} de xG e sofreu ${ga} para ${nf1.format(xga)}.</p><p>${verdict}</p>`;
 
   const maxY = Math.max(...ms.flatMap(m => [m.gf, m.ga, m.xgf, m.xga]), 4);
   responsive($("chart-for"), W => draw($("chart-for"), W, "gf", "xgf", "var(--s1)"));
@@ -467,26 +498,41 @@ $("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 é
   }
 })();
 
-/* Tabela projetada */
+/* Classificação e projeção */
 (function projTable() {
   const t = $("table");
-  const maxP = Math.ceil(Math.max(...DATA.table.map(r => r.p95)) / 10) * 10;
-  t.innerHTML = `<caption class="sr-only">Classificação projetada no fim da época</caption>
-    <thead><tr><th class="team">Equipa</th><th>Pontos agora</th><th>Pontos no fim</th><th style="text-align:left">Intervalo de 90%</th><th>Título</th><th>Top 4</th><th>Descida</th></tr></thead>`;
-  const tb = document.createElement("tbody");
-  DATA.table.forEach((r, i) => {
-    const tr = document.createElement("tr");
-    if (r.barca) tr.className = "barca";
-    const z = p => `<td class="${p < 0.005 ? "dimz" : ""}">${pct(p)}</td>`;
-    tr.innerHTML = `<td class="team"><span class="pos">${i + 1}</span>${r.team}</td><td>${r.points_now}</td><td><b>${nf1.format(r.exp_points)}</b></td><td class="range"></td>${z(r.p_title)}${z(r.p_top4)}${z(r.p_releg)}`;
-    const svg = el("svg", { viewBox: "0 0 300 20", preserveAspectRatio: "none", "aria-label": `entre ${Math.round(r.p5)} e ${Math.round(r.p95)} pontos` }, tr.querySelector(".range"));
-    const sx = v => 4 + (v / maxP) * 292;
-    el("rect", { x: sx(r.p5), y: 7, width: Math.max(2, sx(r.p95) - sx(r.p5)), height: 6, rx: 3, fill: r.barca ? "color-mix(in srgb, var(--grana) 40%, transparent)" : "var(--other)" }, svg);
-    el("rect", { x: sx(r.exp_points) - 1.5, y: 3, width: 3, height: 14, rx: 1, fill: r.barca ? "var(--grana)" : "var(--ink-2)" }, svg);
-    bindTip(tr.querySelector(".range"), `<b>${r.team}</b><br>${nf1.format(r.exp_points)} pontos esperados<br>90% entre ${Math.round(r.p5)} e ${Math.round(r.p95)}`);
-    tb.appendChild(tr);
-  });
-  t.appendChild(tb);
+  const lo = Math.floor(Math.min(...DATA.table.map(r => r.p5)) / 10) * 10;
+  const hi = Math.ceil(Math.max(...DATA.table.map(r => r.p95)) / 10) * 10;
+  const sx = v => 4 + ((v - lo) / (hi - lo)) * 292;
+
+  function render(mode) {
+    const rows = [...DATA.table].sort((a, b) => mode === "now" ? a.pos_now - b.pos_now : a.proj_rank - b.proj_rank);
+    t.innerHTML = `<caption class="sr-only">${mode === "now" ? "Classificação atual" : "Classificação projetada no fim da época"}, com a projeção de cada equipa</caption>
+      <thead><tr><th class="team">Equipa</th><th>J</th><th>DG</th><th>Pts</th>
+      <th class="sep">Pontos no fim</th><th style="text-align:left">Intervalo de 90%</th><th>Título</th><th>Top 4</th><th>Descida</th></tr></thead>`;
+    const tb = document.createElement("tbody");
+    rows.forEach(r => {
+      const tr = document.createElement("tr");
+      if (r.barca) tr.className = "barca";
+      const z = p => `<td class="${p < 0.005 ? "dimz" : ""}">${pct(p)}</td>`;
+      const pos = mode === "now" ? r.pos_now : r.proj_rank;
+      const gd = r.gd > 0 ? "+" + r.gd : r.gd;
+      tr.innerHTML = `<td class="team"><span class="pos">${pos}</span>${r.team}</td><td>${r.played}</td><td>${gd}</td><td><b>${r.points_now}</b></td>
+        <td class="sep"><b>${nf1.format(r.exp_points)}</b></td><td class="range"></td>${z(r.p_title)}${z(r.p_top4)}${z(r.p_releg)}`;
+      const svg = el("svg", { viewBox: "0 0 300 20", preserveAspectRatio: "none", "aria-label": `entre ${Math.round(r.p5)} e ${Math.round(r.p95)} pontos` }, tr.querySelector(".range"));
+      el("rect", { x: sx(r.p5), y: 7, width: Math.max(2, sx(r.p95) - sx(r.p5)), height: 6, rx: 3, fill: r.barca ? "color-mix(in srgb, var(--grana) 40%, transparent)" : "var(--other)" }, svg);
+      el("rect", { x: sx(r.exp_points) - 1.5, y: 3, width: 3, height: 14, rx: 1, fill: r.barca ? "var(--grana)" : "var(--ink-2)" }, svg);
+      bindTip(tr.querySelector(".range"), `<b>${r.team}</b><br>${nf1.format(r.exp_points)} pontos em média<br>90% das simulações entre ${Math.round(r.p5)} e ${Math.round(r.p95)}`);
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  }
+
+  document.querySelectorAll(".sorter button").forEach(btn => btn.addEventListener("click", () => {
+    document.querySelectorAll(".sorter button").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+    render(btn.dataset.sort);
+  }));
+  render("now");
 })();
 
 /* Evolução da probabilidade de título */
@@ -510,16 +556,16 @@ $("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 é
   h.forEach((p, i) => {
     const last = i === h.length - 1;
     const c = el("circle", { cx: x(p.x), cy: y(p.y), r: last ? 6 : 4, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
-    bindTip(c, `<b>Jornada ${Math.round(p.x)}</b><br>Título: ${pct(p.y)}<br>dados até ${fmtDate(p.date)}`);
+    bindTip(c, `<b>${Math.round(p.x)}.ª jornada</b><br>Título: ${pct(p.y)}<br>jogos até ${fmtDate(p.date)}`);
     if (last) {
-      el("text", { x: x(p.x) + 12, y: y(p.y) + 4, class: "lab-strong" }, svg).textContent = `${pct(p.y)} após a jornada ${Math.round(p.x)}`;
+      el("text", { x: x(p.x) + 12, y: y(p.y) + 4, class: "lab-strong" }, svg).textContent = `${pct(p.y)} após a ${Math.round(p.x)}.ª jornada`;
     }
   });
   if (h.length < 2) {
     const n = document.createElement("p");
     n.className = "sub";
     n.style.margin = ".5rem 0 0";
-    n.textContent = "A linha ganha forma a partir da próxima jornada: cada atualização semanal acrescenta um ponto.";
+    n.textContent = "Por agora há só um ponto. A partir da próxima jornada, cada atualização acrescenta outro.";
     box.appendChild(n);
   }
   }
@@ -529,9 +575,9 @@ $("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 é
 (function nextMatchday() {
   const box = $("games");
   const nm = DATA.next_matchday;
-  $("jornada-title").textContent = `Previsões da jornada ${DATA.matchday + 1}`;
+  $("jornada-title").textContent = `Previsões para a ${DATA.matchday + 1}.ª jornada`;
   if (!nm) {
-    box.innerHTML = `<div class="empty"><strong>Ainda não há previsões para a jornada ${DATA.matchday + 1}.</strong> São publicadas assim que o calendário dos jogos sair, antes do primeiro apito.</div>`;
+    box.innerHTML = `<div class="empty"><strong>As previsões da ${DATA.matchday + 1}.ª jornada ainda não saíram.</strong> Ficam disponíveis quando o calendário for publicado, antes do primeiro jogo.</div>`;
     return;
   }
   const ul = document.createElement("ul");
@@ -542,7 +588,7 @@ $("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 é
     const seg = (cls, p, lab) => `<span class="${cls}" style="flex:${Math.max(p, .02)}" title="${lab}: ${pct(p)}">${p >= .12 ? pct(p) : ""}</span>`;
     li.innerHTML = `<div class="teams">${g.home} – ${g.away}<small>${fmtDate(g.date, { weekday: "long", day: "numeric", month: "long" })}</small></div>
       <div class="split" aria-label="Vitória ${g.home} ${pct(g.p[0])}, empate ${pct(g.p[1])}, vitória ${g.away} ${pct(g.p[2])}">${seg("h", g.p[0], g.home)}${seg("x", g.p[1], "Empate")}${seg("a", g.p[2], g.away)}</div>
-      <div class="score">mais provável <b>${g.score}</b></div>`;
+      <div class="score">resultado mais provável <b>${g.score}</b></div>`;
     ul.appendChild(li);
   });
   box.appendChild(ul);
@@ -553,8 +599,8 @@ $("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 é
   const bt = DATA.backtest, m = bt.metrics;
   const naive = m["ingénuo"].rps, us = m["modelo"].rps, odds = m["odds"].rps;
   const share = Math.round((naive - us) / (naive - odds) * 100);
-  $("confianca-text").innerHTML = `<p>Antes de prever esta época, o modelo foi posto à prova em ${bt.games.toLocaleString("pt-PT")} jogos das três épocas anteriores, sempre só com a informação disponível antes de cada jornada.</p><p>Fica a ${share}% do caminho entre um palpite ingénuo e as casas de apostas, que conhecem lesões, onzes e o dinheiro dos apostadores profissionais. Acerta o resultado em ${Math.round(m["modelo"].acerto * 100)}% dos jogos, contra ${Math.round(m["odds"].acerto * 100)}% das casas de apostas.</p>`;
-  $("rps-sub").textContent = "Ranked Probability Score nas três épocas de teste. Menor é melhor.";
+  $("confianca-text").innerHTML = `<p>Antes de ser usado nesta época, o modelo foi testado em ${bt.games.toLocaleString("pt-PT")} jogos das três épocas anteriores. Em cada semana só podia usar os jogos já disputados.</p><p>Um palpite ingénuo dá a todos os jogos as mesmas probabilidades médias de vitória em casa, empate e vitória fora. O modelo recupera ${share}% da distância entre esse palpite e as casas de apostas, que sabem coisas que o modelo não sabe, como lesões e onzes iniciais. Acerta o vencedor (ou o empate) em ${Math.round(m["modelo"].acerto * 100)}% dos jogos; as casas de apostas acertam em ${Math.round(m["odds"].acerto * 100)}%.</p>`;
+  $("rps-sub").textContent = "Ranked Probability Score nas três épocas de teste. Quanto mais baixo, melhor.";
   const rows = [["Palpite ingénuo", naive, ""], ["Este modelo", us, "us"], ["Casas de apostas", odds, ""]];
   const lo = 0.17, hi = Math.max(naive, us, odds) + 0.005;
   rows.forEach(([lab, v, cls]) => {
@@ -566,7 +612,7 @@ $("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 é
   const note = document.createElement("p");
   note.className = "sub";
   note.style.margin = ".9rem 0 0";
-  note.textContent = `O eixo começa em ${nf2.format(lo)} para as diferenças serem visíveis.`;
+  note.textContent = `O eixo começa em ${nf2.format(lo)} para se verem as diferenças.`;
   $("rps-bars").after(note);
 
   const box = $("chart-calib");
@@ -595,7 +641,7 @@ $("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 é
     const p = document.createElement("p");
     p.className = "sub";
     p.style.margin = ".5rem 0 0";
-    p.textContent = `À direita, a linha fica acima da diagonal: quando o modelo dá ${pct(f.previsto)} a um favorito, este ganha ${pct(f.real)} das vezes. O modelo é conservador com os favoritos, o que inclui o Barça.`;
+    p.textContent = `Do lado direito, os pontos ficam acima da diagonal: quando o modelo dá ${pct(f.previsto)} a um favorito, este ganha ${pct(f.real)} das vezes. Ou seja, o modelo subestima os favoritos, e o Barcelona é um deles.`;
     box.after(p);
   }
 })();
