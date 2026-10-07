@@ -21,6 +21,7 @@ from barca.simulate import simulate, summary, table
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "site" / "template.html"
+CRESTS = json.loads((ROOT / "site" / "crests.json").read_text(encoding="utf-8"))
 OUT = ROOT / "docs" / "index.html"
 PRED_DIR = ROOT / "predictions"
 BACKTEST_CSV = ROOT / "data" / "processed" / f"backtest_xi{DEFAULT_XI}.csv"
@@ -40,6 +41,12 @@ NAMES = {
 
 def name(team: str) -> str:
     return NAMES.get(team, team)
+
+
+def crest(team: str) -> dict | None:
+    """Emblema do clube (caminho relativo a docs/ e dimensões), se existir."""
+    c = CRESTS.get(team)
+    return {"src": c["src"], "w": c["w"], "h": c["h"]} if c else None
 
 
 def backtest_section() -> dict:
@@ -75,6 +82,7 @@ def latest_matchday() -> dict | None:
     df = pd.read_csv(files[-1], parse_dates=["date"])
     games = [{
         "date": g["date"].strftime("%Y-%m-%d"), "home": name(g["home"]), "away": name(g["away"]),
+        "home_crest": crest(g["home"]), "away_crest": crest(g["away"]),
         "barca": TEAM in (g["home"], g["away"]),
         "p": [round(g["p_home"], 4), round(g["p_draw"], 4), round(g["p_away"], 4)],
         "xg": [round(g["xg_home"], 2), round(g["xg_away"], 2)], "score": g["likely_score"],

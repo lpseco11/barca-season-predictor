@@ -1,0 +1,142 @@
+{
+ "Barcelona": {
+  "src": "img/crests/barcelona.webp",
+  "w": 252,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:FC_Barcelona_(crest).svg",
+  "license": "PD"
+ },
+ "Real Madrid": {
+  "src": "img/crests/real-madrid.webp",
+  "w": 190,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Real_Madrid_CF.svg",
+  "license": "Fair use"
+ },
+ "Ath Madrid": {
+  "src": "img/crests/ath-madrid.webp",
+  "w": 199,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Atletico_Madrid_Logo_2024.svg",
+  "license": "Fair use"
+ },
+ "Betis": {
+  "src": "img/crests/betis.webp",
+  "w": 256,
+  "h": 218,
+  "source": "https://en.wikipedia.org/wiki/File:Real_Betis_2022_logo.svg",
+  "license": "Fair use"
+ },
+ "Villarreal": {
+  "src": "img/crests/villarreal.webp",
+  "w": 206,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Villarreal_CF_logo-en.svg",
+  "license": "Fair use"
+ },
+ "Ath Bilbao": {
+  "src": "img/crests/ath-bilbao.webp",
+  "w": 226,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Club_Athletic_Bilbao_logo.svg",
+  "license": "Fair use"
+ },
+ "Sociedad": {
+  "src": "img/crests/sociedad.webp",
+  "w": 222,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Real_Sociedad_logo.svg",
+  "license": "Fair use"
+ },
+ "Sevilla": {
+  "src": "img/crests/sevilla.webp",
+  "w": 210,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Sevilla_FC_logo.svg",
+  "license": "Fair use"
+ },
+ "Celta": {
+  "src": "img/crests/celta.webp",
+  "w": 145,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:RC_Celta_de_Vigo_logo.svg",
+  "license": "Fair use"
+ },
+ "Alaves": {
+  "src": "img/crests/alaves.webp",
+  "w": 256,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Deportivo_Alaves_logo_(2020).svg",
+  "license": "PD"
+ },
+ "Vallecano": {
+  "src": "img/crests/vallecano.webp",
+  "w": 256,
+  "h": 228,
+  "source": "https://en.wikipedia.org/wiki/File:Rayo_Vallecano_logo.svg",
+  "license": "Fair use"
+ },
+ "Osasuna": {
+  "src": "img/crests/osasuna.webp",
+  "w": 191,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:CA_Osasuna_2024_crest.svg",
+  "license": "Fair use"
+ },
+ "Espanol": {
+  "src": "img/crests/espanol.webp",
+  "w": 181,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:RCD_Espanyol_crest.svg",
+  "license": "Fair use"
+ },
+ "Getafe": {
+  "src": "img/crests/getafe.webp",
+  "w": 245,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Getafe_logo.svg",
+  "license": "Fair use"
+ },
+ "Levante": {
+  "src": "img/crests/levante.webp",
+  "w": 210,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Levante_Uni%C3%B3n_Deportiva,_S.A.D._logo.svg",
+  "license": "Fair use"
+ },
+ "La Coruna": {
+  "src": "img/crests/la-coruna.webp",
+  "w": 209,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:RC_Deportivo_A_Coru%C3%B1a_logo_2026.svg",
+  "license": "Fair use"
+ },
+ "Elche": {
+  "src": "img/crests/elche.webp",
+  "w": 209,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Elche_CF_logo.svg",
+  "license": "Fair use"
+ },
+ "Valencia": {
+  "src": "img/crests/valencia.webp",
+  "w": 203,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Valenciacf.svg",
+  "license": "Fair use"
+ },
+ "Santander": {
+  "src": "img/crests/santander.webp",
+  "w": 183,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:Racing_de_Santander_logo.svg",
+  "license": "Fair use"
+ },
+ "Malaga": {
+  "src": "img/crests/malaga.webp",
+  "w": 226,
+  "h": 256,
+  "source": "https://en.wikipedia.org/wiki/File:M%C3%A1laga_CF.svg",
+  "license": "Fair use"
+ }
+}
