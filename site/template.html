@@ -408,7 +408,7 @@ function bindTip(node, html) {
 /* Cabeçalho e título */
 const barcaTitle = (DATA.title.find(t => t.barca) || { p: 0 }).p;
 const inHundred = Math.round(barcaTitle * 100);
-$("updated").textContent = `Atualizado a ${fmtDate(DATA.updated)}, com os jogos até à ${DATA.matchday}.ª jornada`;
+$("updated").textContent = `Com os resultados até à ${DATA.matchday}.ª jornada (${fmtDate(DATA.data_until)})`;
 $("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão em ${inHundred}`;
 
 /* Riscas: 100 épocas, repartidas pelo maior resto */
