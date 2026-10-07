@@ -1,0 +1,62 @@
+name: Atualização diária
+
+# Todas as manhãs: regista previsões de jogos novos (antes de se jogarem),
+# volta a simular a época se houver resultados novos e gera o site.
+# Só faz commit quando alguma coisa mudou.
+on:
+  schedule:
+    - cron: "0 7 * * *" # 07:00 UTC = 08:00 em Lisboa (horário de verão)
+  workflow_dispatch: # permite correr à mão no separador Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+env:
+  TZ: Europe/Lisbon
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Testes
+        run: pytest -q
+
+      - name: Registar previsões de jogos novos
+        run: python scripts/predict_matchday.py
+
+      - name: Simular a época
+        run: python scripts/simulate_season.py
+
+      - name: Gerar o site
+        run: python scripts/build_site.py
+
+      - name: Guardar alterações
+        run: |
+          git add predictions docs
+          if git diff --cached --quiet; then
+            echo "Sem alterações."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Atualização automática: $(date +'%Y-%m-%d %H:%M')"
+          git push

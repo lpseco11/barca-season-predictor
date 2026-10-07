@@ -63,8 +63,10 @@ if __name__ == "__main__":
     }])
     HISTORY.parent.mkdir(exist_ok=True)
     history = pd.read_csv(HISTORY) if HISTORY.exists() else pd.DataFrame()
-    # Uma linha por estado dos dados: correr de novo sem jogos novos substitui a linha.
-    if not history.empty:
-        history = history[history["data_until"] != entry["data_until"].iloc[0]]
-    pd.concat([history, entry], ignore_index=True).to_csv(HISTORY, index=False)
-    print(f"\nHistórico atualizado: {HISTORY.relative_to(ROOT)}")
+    # Uma linha por estado dos dados: sem jogos novos, o histórico fica como está
+    # (assim a corrida diária não gera alterações nem commits desnecessários).
+    if not history.empty and (history["games_played"] == len(played)).any():
+        print(f"\nHistórico sem alterações: ainda não há jogos novos desde {entry['data_until'].iloc[0]}.")
+    else:
+        pd.concat([history, entry], ignore_index=True).to_csv(HISTORY, index=False)
+        print(f"\nHistórico atualizado: {HISTORY.relative_to(ROOT)}")

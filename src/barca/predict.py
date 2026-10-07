@@ -29,6 +29,18 @@ def load_fixtures(division: str = "SP1", manual: Path | None = None) -> pd.DataF
     return df[cols].reset_index(drop=True)
 
 
+def new_fixtures(fixtures: pd.DataFrame, done: pd.DataFrame, today: pd.Timestamp) -> pd.DataFrame:
+    """Jogos ainda por disputar (a partir de `today`) que não têm previsão registada."""
+    key = ["date", "home", "away"]
+    upcoming = fixtures[fixtures["date"] >= today].copy()
+    upcoming["date"] = upcoming["date"].astype("datetime64[ns]")
+    if done.empty:
+        return upcoming.reset_index(drop=True)
+    done = done[key].astype({"date": "datetime64[ns]"})
+    merged = upcoming.merge(done, on=key, how="left", indicator=True)
+    return merged[merged["_merge"] == "left_only"].drop(columns="_merge").reset_index(drop=True)
+
+
 def predict_fixtures(model: DixonColes, fixtures: pd.DataFrame) -> pd.DataFrame:
     unknown = (set(fixtures["home"]) | set(fixtures["away"])) - set(model.teams)
     if unknown:

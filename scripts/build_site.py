@@ -7,7 +7,6 @@ Uso: .venv/bin/python scripts/build_site.py
 """
 
 import json
-from datetime import date
 from pathlib import Path
 
 import numpy as np
@@ -75,11 +74,16 @@ def backtest_section() -> dict:
             "calibration": calib.reset_index(drop=True).round(4).to_dict("records")}
 
 
-def latest_matchday() -> dict | None:
+def latest_matchday(played: pd.DataFrame) -> dict | None:
+    """Previsões registadas para jogos que ainda não se disputaram (ou None)."""
     files = sorted(PRED_DIR.glob("matchday_*.csv"))
     if not files:
         return None
     df = pd.read_csv(files[-1], parse_dates=["date"])
+    done = set(zip(played["date"], played["home"], played["away"]))
+    df = df[[(d, h, a) not in done for d, h, a in zip(df["date"], df["home"], df["away"])]]
+    if df.empty:
+        return None
     games = [{
         "date": g["date"].strftime("%Y-%m-%d"), "home": name(g["home"]), "away": name(g["away"]),
         "home_crest": crest(g["home"]), "away_crest": crest(g["away"]),
@@ -88,6 +92,13 @@ def latest_matchday() -> dict | None:
         "xg": [round(g["xg_home"], 2), round(g["xg_away"], 2)], "score": g["likely_score"],
     } for _, g in df.iterrows()]
     return {"created_at": df["created_at"].iloc[0], "games": games}
+
+
+def last_update(played: pd.DataFrame) -> str:
+    dates = [played["date"].max().date()]
+    for f in PRED_DIR.glob("matchday_*.csv"):
+        dates.append(pd.to_datetime(pd.read_csv(f)["created_at"]).max().date())
+    return max(dates).isoformat()
 
 
 if __name__ == "__main__":
@@ -121,7 +132,9 @@ if __name__ == "__main__":
     history = pd.read_csv(PRED_DIR / "season_history.csv") if (PRED_DIR / "season_history.csv").exists() else pd.DataFrame()
 
     data = {
-        "updated": date.today().isoformat(),
+        # Data da última novidade (resultados ou previsões), e não do dia em que o script corre:
+        # assim o site só muda quando há dados novos.
+        "updated": last_update(played),
         "data_until": played["date"].max().strftime("%Y-%m-%d"),
         "games_played": int(len(played)),
         "matchday": int(round(len(played) / 10)),
@@ -136,7 +149,7 @@ if __name__ == "__main__":
         },
         "table": rows,
         "history": history.to_dict("records"),
-        "next_matchday": latest_matchday(),
+        "next_matchday": latest_matchday(played),
         "backtest": backtest_section(),
     }
 

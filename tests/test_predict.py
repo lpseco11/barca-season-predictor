@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from barca.model import DixonColes
-from barca.predict import evaluate_logged, predict_fixtures
+from barca.predict import evaluate_logged, new_fixtures, predict_fixtures
 
 MODEL = DixonColes(teams=["Barcelona", "Getafe"], attack=np.array([0.8, -0.8]),
                    defence=np.array([-0.5, 0.5]), intercept=0.0, home_adv=0.25, rho=-0.05)
@@ -32,3 +32,20 @@ def test_evaluate_logged():
     assert metrics["jogos"] == 1
     assert metrics["acerto_modelo"] == 1.0
     assert "rps_odds" in metrics
+
+
+def test_new_fixtures_skips_past_and_already_predicted():
+    fixtures = pd.DataFrame({
+        "date": pd.to_datetime(["2026-10-09", "2026-10-10", "2026-10-11"]),
+        "home": ["Elche", "Getafe", "Real Madrid"],
+        "away": ["Osasuna", "Barcelona", "Sevilla"],
+    })
+    done = pd.DataFrame({"date": pd.to_datetime(["2026-10-10"]), "home": ["Getafe"], "away": ["Barcelona"]})
+    left = new_fixtures(fixtures, done, today=pd.Timestamp("2026-10-10"))
+    assert list(left["home"]) == ["Real Madrid"]
+
+
+def test_new_fixtures_without_previous_predictions():
+    fixtures = FIXTURES[["date", "home", "away"]]
+    empty = pd.DataFrame(columns=["date", "home", "away"])
+    assert len(new_fixtures(fixtures, empty, today=pd.Timestamp("2026-10-01"))) == 1
