@@ -1,6 +1,6 @@
 # Barcelona 26/27: previsões para La Liga
 
-Modelo estatístico que estima como vai acabar a época 2026/27 do Barcelona em La Liga e prevê os jogos de cada jornada antes de se disputarem. O site atualiza-se sozinho todos os dias.
+Modelo estatístico que estima como vai acabar a época 2026/27 do Barcelona na La Liga e prevê os jogos de cada jornada antes de serem disputados. O site atualiza-se sozinho todos os dias.
 
 Site: https://lpseco11.github.io/barca-season-predictor/
 
@@ -8,7 +8,7 @@ Site: https://lpseco11.github.io/barca-season-predictor/
 
 ## O que o projeto faz
 
-Depois de cada jornada, um modelo Dixon-Coles volta a estimar a força de ataque e de defesa das 20 equipas, e o resto da época é simulado 10 000 vezes. Daí saem as hipóteses de título, de Champions e de descida de cada equipa, e os pontos com que deve acabar.
+Depois de cada jornada, um modelo Dixon-Coles volta a estimar a força de ataque e de defesa das 20 equipas, e o resto da época é simulado 10 000 vezes. Daí saem as hipóteses de título, de Champions(top 4 na liga), e de descida de cada equipa, e os pontos com que deve acabar.
 
 Antes de cada jornada, o projeto regista a previsão de cada jogo: probabilidades de vitória, empate e derrota e o resultado mais provável. O ficheiro fica no repositório com a data do commit, por isso dá para confirmar que a previsão foi feita antes do jogo.
 
@@ -16,7 +16,7 @@ O site também compara os golos do Barcelona com o xG de cada jogo, para percebe
 
 ## Resultados do backtest
 
-Antes de ser usado nesta época, o modelo previu as épocas 2023/24, 2024/25 e 2025/26 de La Liga (1140 jogos), semana a semana, só com os jogos já disputados em cada momento.
+Antes de ser usado nesta época, o modelo preveu as épocas 2023/24, 2024/25 e 2025/26 de La Liga (1140 jogos), semana a semana, só com os jogos já disputados em cada momento.
 
 | | RPS | Log loss | Acerto 1X2 |
 |---|---|---|---|
@@ -30,7 +30,7 @@ O modelo é conservador com os favoritos. Quando dá 75% a uma equipa, ela ganha
 
 ## Como funciona
 
-1. Dados: resultados, remates, xG e odds de La Liga e da Segunda Divisão desde 2021/22, de [football-data.co.uk](https://www.football-data.co.uk/). A Segunda serve para as equipas promovidas terem histórico.
+1. Dados: resultados, remates, xG e odds de La Liga e da Segunda Divisão desde 2021/22, de [football-data.co.uk](https://www.football-data.co.uk/). A Segunda divisão serve para as equipas promovidas terem histórico.
 2. Modelo: Dixon-Coles com decaimento temporal. Cada jogo pesa `exp(-ξ · dias)`, com ξ = 0,0019, o melhor valor no backtest; um jogo com um ano conta metade. Os parâmetros são estimados por máxima verosimilhança, com gradiente analítico.
 3. Simulação: Monte Carlo das jornadas em falta. Em cada simulação, as forças das equipas são sorteadas a partir da incerteza da estimativa (aproximação de Laplace). Depois da 7.ª jornada, isso baixou a probabilidade de título do Barcelona de 88% para 83%.
 4. Atualização: um workflow do GitHub Actions corre todas as manhãs. Regista previsões para jogos novos, volta a simular a época quando há resultados novos e gera o site estático em `docs/`, publicado pelo GitHub Pages. Só faz commit quando alguma coisa mudou.
