@@ -23,7 +23,9 @@ TEMPLATE = ROOT / "site" / "template.html"
 CRESTS = json.loads((ROOT / "site" / "crests.json").read_text(encoding="utf-8"))
 OUT = ROOT / "docs" / "index.html"
 PRED_DIR = ROOT / "predictions"
-BACKTEST_CSV = ROOT / "data" / "processed" / f"backtest_xi{DEFAULT_XI}.csv"
+# Previsões do backtest (épocas passadas, não mudam). Ficam no repositório para o site
+# ser igual em qualquer máquina, sem diferenças de vírgula flutuante.
+BACKTEST_CSV = PRED_DIR / "backtest_2324-2526.csv"
 
 SEASONS = ["2122", "2223", "2324", "2425", "2526", CURRENT_SEASON]
 BACKTEST_SEASONS = ["2324", "2425", "2526"]
