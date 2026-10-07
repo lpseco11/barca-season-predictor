@@ -60,8 +60,9 @@ def backtest_section() -> dict:
     ev = evaluate(preds)
     totals = (ev.assign(w=ev.rps * ev.jogos, a=ev.acerto * ev.jogos)
               .groupby("fonte")[["w", "a", "jogos"]].sum())
-    metrics = {f: {"rps": totals.loc[f, "w"] / totals.loc[f, "jogos"],
-                   "acerto": totals.loc[f, "a"] / totals.loc[f, "jogos"]} for f in totals.index}
+    # Arredondado: diferenças mínimas de vírgula flutuante entre máquinas não devem mudar o site.
+    metrics = {f: {"rps": round(totals.loc[f, "w"] / totals.loc[f, "jogos"], 4),
+                   "acerto": round(totals.loc[f, "a"] / totals.loc[f, "jogos"], 4)} for f in totals.index}
 
     y = outcome(preds)
     probs = preds[["p_home", "p_draw", "p_away"]].to_numpy().ravel()
