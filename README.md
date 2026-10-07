@@ -27,9 +27,13 @@ python3 -m venv .venv
 ## Estrutura
 
 ```
-src/barca/      código (data.py: download e limpeza)
+src/barca/      código: data, model (Dixon-Coles), backtest, simulate, predict
+scripts/        simulate_season, predict_matchday, evaluate_predictions, run_backtest, build_site
+site/           template da página
+docs/           site gerado (servido pelo GitHub Pages)
 data/raw/       CSVs descarregados (não versionados)
 predictions/    previsões registadas antes de cada jornada
-notebooks/      exploração
 tests/
 ```
+
+Gerar o site: `.venv/bin/python scripts/build_site.py` → `docs/index.html`.

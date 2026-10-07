@@ -112,6 +112,8 @@ def summary(sims: dict) -> pd.DataFrame:
     df = pd.DataFrame({
         "team": sims["teams"],
         "pontos_esperados": pts.mean(axis=0),
+        "pontos_p5": np.percentile(pts, 5, axis=0),
+        "pontos_p95": np.percentile(pts, 95, axis=0),
         "posicao_media": pos.mean(axis=0),
         "p_titulo": (pos == 1).mean(axis=0),
         "p_top4": (pos <= 4).mean(axis=0),

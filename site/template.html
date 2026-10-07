@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Barça 26/27</title>
+<meta name="description" content="Previsões semanais para o FC Barcelona em La Liga 2026/27: modelo Dixon-Coles e 10 000 simulações da época.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --ink: #0f1b3d;
+  --ink-2: #46506b;
+  --muted: #5f6982;
+  --rule: #dce1ea;
+  --track: #e8ecf3;
+  --blau: #004d98;
+  --grana: #a50044;
+  --groc: #edbb00;
+  --other: #cdd4e1;
+  --other-2: #aeb8ca;
+  --s1: #a50044;
+  --split-1: #46506b;
+  --split-x: #aeb8ca;
+  --split-2: #7c869e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0b1430;
+    --surface: #111c3e;
+    --ink: #eef1f8;
+    --ink-2: #b7bfd3;
+    --muted: #8f99b3;
+    --rule: #24305a;
+    --track: #1a2550;
+    --blau: #2f6fca;
+    --grana: #e0508c;
+    --groc: #f2c94c;
+    --other: #2a3763;
+    --other-2: #46547f;
+    --s1: #e0508c;
+    --split-1: #b7bfd3;
+    --split-x: #46547f;
+    --split-2: #7f8aa8;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b1430;
+  --surface: #111c3e;
+  --ink: #eef1f8;
+  --ink-2: #b7bfd3;
+  --muted: #8f99b3;
+  --rule: #24305a;
+  --track: #1a2550;
+  --blau: #2f6fca;
+  --grana: #e0508c;
+  --groc: #f2c94c;
+  --other: #2a3763;
+  --other-2: #46547f;
+  --s1: #e0508c;
+  --split-1: #b7bfd3;
+  --split-x: #46547f;
+  --split-2: #7f8aa8;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  font-variation-settings: "wdth" 100;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+.wrap {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px));
+  padding-block: 0 4rem;
+}
+.prose { max-width: 38rem; }
+.num, .cond { font-variation-settings: "wdth" 72; font-variant-numeric: tabular-nums; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--grana); }
+:focus-visible { outline: 2px solid var(--grana); outline-offset: 3px; border-radius: 2px; }
+
+/* Cabeçalho */
+.masthead {
+  display: flex; flex-wrap: wrap; gap: .5rem 2rem; align-items: baseline; justify-content: space-between;
+  padding-block: 1.25rem; border-bottom: 1px solid var(--rule);
+}
+.wordmark { font-weight: 800; font-size: 1.15rem; font-variation-settings: "wdth" 70; letter-spacing: .01em; margin: 0; }
+.wordmark span { color: var(--muted); font-weight: 500; }
+.updated { color: var(--muted); font-size: .9rem; margin: 0; }
+
+/* Destaque */
+.hero { padding-block: 3.5rem 1rem; }
+.hero h1 {
+  font-size: clamp(2.3rem, 6.4vw, 4.6rem);
+  line-height: 1.02;
+  font-weight: 750;
+  font-variation-settings: "wdth" 66;
+  letter-spacing: -.005em;
+  max-width: 15ch;
+  margin: 0 0 2.25rem;
+  text-wrap: balance;
+}
+.stripes { position: relative; }
+.stripes svg { display: block; width: 100%; height: clamp(150px, 24vw, 230px); }
+.stripes rect { transition: opacity .15s; }
+.stripes.dim rect:not(.on) { opacity: .35; }
+.stripe-legend { display: flex; flex-wrap: wrap; gap: .25rem 1.75rem; margin: .75rem 0 0; padding: 0; list-style: none; font-size: .95rem; color: var(--ink-2); }
+.stripe-legend b { font-weight: 700; color: var(--ink); font-variation-settings: "wdth" 72; font-size: 1.1rem; margin-right: .3rem; }
+.stripe-note { color: var(--muted); font-size: .9rem; margin: .5rem 0 0; }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1.5rem 2.5rem; margin: 3rem 0 0; }
+.facts div { border-top: 3px solid var(--ink); padding-top: .75rem; }
+.facts dt { font-size: 2.6rem; line-height: 1; font-weight: 700; font-variation-settings: "wdth" 66; font-variant-numeric: tabular-nums; }
+.facts dd { margin: .5rem 0 0; color: var(--ink-2); font-size: .95rem; max-width: 22rem; }
+
+/* Secções */
+section { padding-block: 4.5rem 0; }
+section > h2 {
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem); line-height: 1.1; font-weight: 700;
+  font-variation-settings: "wdth" 70; margin: 0 0 .75rem; max-width: 24ch; text-wrap: balance;
+}
+section > .prose p { margin: 0 0 1rem; color: var(--ink-2); }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem 1.25rem 1rem; margin-top: 1.75rem; }
+.panel h3 { font-size: 1rem; font-weight: 650; margin: 0 0 .25rem; }
+.panel .sub { color: var(--muted); font-size: .88rem; margin: 0 0 .75rem; }
+.duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 1.25rem; }
+.duo .panel { margin-top: 0; }
+.key { display: flex; gap: 1.25rem; flex-wrap: wrap; font-size: .85rem; color: var(--ink-2); margin: 0 0 .5rem; padding: 0; list-style: none; }
+.key svg { vertical-align: -2px; margin-right: .35rem; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+.chart .ax { stroke: var(--rule); }
+.chart .lab-strong { fill: var(--ink); font-weight: 650; }
+
+/* Tabela */
+.table-scroll { overflow-x: auto; margin-top: 1.75rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 44rem; font-size: .95rem; }
+th, td { padding: .55rem .75rem; text-align: right; white-space: nowrap; }
+th { font-weight: 600; color: var(--muted); font-size: .82rem; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+td { border-bottom: 1px solid var(--rule); font-variation-settings: "wdth" 80; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+th:first-child, td:first-child { text-align: left; }
+td.team { font-variation-settings: "wdth" 100; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+td.team .pos { display: inline-block; width: 1.6rem; color: var(--muted); font-variation-settings: "wdth" 80; }
+th.team { position: sticky; left: 0; background: var(--surface); z-index: 1; }
+tr.barca td { background: color-mix(in srgb, var(--grana) 7%, var(--surface)); }
+tr.barca td.team { font-weight: 700; box-shadow: inset 3px 0 0 var(--grana); }
+td.range { width: 34%; min-width: 14rem; padding-block: .3rem; }
+td.range svg { display: block; width: 100%; height: 20px; }
+.dimz { color: var(--muted); }
+
+/* Jogos */
+.games { list-style: none; margin: 1.75rem 0 0; padding: 0; display: grid; gap: .5rem; }
+.game { display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(12rem, 2fr) auto; gap: .5rem 1.25rem; align-items: center;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: .75rem 1rem; }
+.game.barca { border-left: 3px solid var(--grana); }
+.game .teams { font-weight: 600; }
+.game .teams small { display: block; color: var(--muted); font-weight: 400; font-size: .82rem; }
+.split { display: flex; height: 26px; gap: 2px; }
+.split span { display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; font-variation-settings: "wdth" 75; min-width: 0; overflow: hidden; border-radius: 3px; }
+.split .h { background: var(--split-1); color: var(--bg); }
+.split .x { background: var(--split-x); color: var(--ink); }
+.split .a { background: var(--split-2); color: var(--bg); }
+.game .score { color: var(--ink-2); font-size: .88rem; text-align: right; }
+.game .score b { font-size: 1.15rem; color: var(--ink); font-variation-settings: "wdth" 72; }
+@media (max-width: 40rem) {
+  .game { grid-template-columns: 1fr auto; }
+  .game .split { grid-column: 1 / -1; grid-row: 2; }
+}
+.empty { margin-top: 1.75rem; padding: 1.5rem; border: 1px dashed var(--other-2); border-radius: 6px; color: var(--ink-2); max-width: 38rem; }
+.empty strong { color: var(--ink); }
+
+/* Comparação de RPS */
+.bars { display: grid; gap: .6rem; margin: .5rem 0 0; }
+.bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3.5rem; gap: .75rem; align-items: center; font-size: .92rem; }
+.bar-row .track { height: 14px; background: var(--track); border-radius: 0 4px 4px 0; position: relative; }
+.bar-row .fill { position: absolute; inset: 0 auto 0 0; background: var(--other-2); border-radius: 0 4px 4px 0; }
+.bar-row.us .fill { background: var(--s1); }
+.bar-row.us { font-weight: 650; }
+.bar-row .v { text-align: right; font-variation-settings: "wdth" 75; font-variant-numeric: tabular-nums; }
+
+/* Método */
+.steps { list-style: none; counter-reset: s; margin: 1.75rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1.5rem 2rem; }
+.steps li { counter-increment: s; border-top: 1px solid var(--rule); padding-top: .9rem; color: var(--ink-2); font-size: .95rem; }
+.steps li::before { content: counter(s); display: block; font-size: 2rem; font-weight: 700; font-variation-settings: "wdth" 66; color: var(--grana); line-height: 1; margin-bottom: .5rem; }
+.steps b { display: block; color: var(--ink); font-size: 1.02rem; margin-bottom: .2rem; }
+
+footer { margin-top: 5rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .88rem; display: flex; flex-wrap: wrap; gap: .5rem 2rem; justify-content: space-between; }
+
+/* Tooltip */
+.tip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: var(--bg); padding: .45rem .6rem; border-radius: 4px; font-size: .82rem; line-height: 1.35; max-width: 16rem; opacity: 0; transition: opacity .1s; }
+.tip.show { opacity: 1; }
+.tip b { font-weight: 700; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .stripes.animate rect { transform-origin: 50% 100%; transform-box: fill-box; animation: rise .6s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i) * 9ms); }
+  @keyframes rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <p class="wordmark">Barça 26/27 <span>previsões</span></p>
+    <p class="updated" id="updated"></p>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1 id="headline"></h1>
+      <div class="stripes" id="stripes" role="img"></div>
+      <ul class="stripe-legend" id="stripe-legend"></ul>
+      <p class="stripe-note">Cada risca é uma de 100 épocas simuladas, colorida com o campeão dessa época.</p>
+      <dl class="facts" id="facts"></dl>
+    </div>
+
+    <section id="goleadas">
+      <h2>As goleadas são reais ou é sorte?</h2>
+      <div class="prose" id="goleadas-text"></div>
+      <div class="duo">
+        <div class="panel">
+          <h3>Golos marcados</h3>
+          <p class="sub">Por jogo, comparados com o xG criado</p>
+          <ul class="key" aria-hidden="true">
+            <li><svg width="10" height="10"><circle cx="5" cy="5" r="4.5" fill="var(--s1)"/></svg>Golos</li>
+            <li><svg width="10" height="10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/></svg>xG</li>
+          </ul>
+          <div class="chart" id="chart-for"></div>
+        </div>
+        <div class="panel">
+          <h3>Golos sofridos</h3>
+          <p class="sub">Por jogo, comparados com o xG concedido</p>
+          <ul class="key" aria-hidden="true">
+            <li><svg width="10" height="10"><circle cx="5" cy="5" r="4.5" fill="var(--ink-2)"/></svg>Golos</li>
+            <li><svg width="10" height="10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/></svg>xG</li>
+          </ul>
+          <div class="chart" id="chart-against"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tabela">
+      <h2>Como pode acabar a época</h2>
+      <div class="prose"><p>Pontos esperados de cada equipa no fim das 38 jornadas. A barra mostra o intervalo onde caem 90% das simulações: quanto mais larga, mais incerto.</p></div>
+      <div class="table-scroll"><table id="table"></table></div>
+    </section>
+
+    <section id="evolucao">
+      <h2>Probabilidade de título, semana a semana</h2>
+      <div class="prose"><p>Depois de cada jornada o modelo é treinado de novo com os resultados mais recentes e a época volta a ser simulada.</p></div>
+      <div class="panel"><div class="chart" id="chart-history"></div></div>
+    </section>
+
+    <section id="jornada">
+      <h2 id="jornada-title">Próxima jornada</h2>
+      <div class="prose"><p>As previsões são feitas antes do primeiro jogo e guardadas no repositório com data e hora, para poderem ser verificadas depois.</p></div>
+      <div id="games"></div>
+    </section>
+
+    <section id="confianca">
+      <h2>Podes confiar no modelo?</h2>
+      <div class="prose" id="confianca-text"></div>
+      <div class="duo">
+        <div class="panel">
+          <h3>Erro das previsões</h3>
+          <p class="sub" id="rps-sub"></p>
+          <div class="bars" id="rps-bars"></div>
+        </div>
+        <div class="panel">
+          <h3>Calibração</h3>
+          <p class="sub">Probabilidade prevista contra a frequência real. Na linha diagonal, o modelo estaria perfeito.</p>
+          <div class="chart" id="chart-calib"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="metodo">
+      <h2>Como funciona</h2>
+      <ol class="steps">
+        <li><b>Dados</b>Resultados, remates, xG e odds de La Liga e da Segunda desde 2021, de football-data.co.uk.</li>
+        <li><b>Modelo</b>Dixon-Coles: cada equipa tem uma força de ataque e uma de defesa. Os jogos recentes pesam mais; um jogo de há um ano vale metade.</li>
+        <li><b>Simulação</b>Os jogos que faltam são sorteados 10 000 vezes, com forças ligeiramente diferentes em cada época para refletir a incerteza.</li>
+        <li><b>Validação</b>O modelo foi testado em três épocas completas, prevendo cada semana só com os jogos anteriores, e comparado com as casas de apostas.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    <span>Código e previsões no <a href="https://github.com/lpseco11/barca-season-predictor">GitHub</a>.</span>
+    <span>Dados: <a href="https://www.football-data.co.uk/">football-data.co.uk</a></span>
+  </footer>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+const NS = "http://www.w3.org/2000/svg";
+const nf1 = new Intl.NumberFormat("pt-PT", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const nf2 = new Intl.NumberFormat("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const nf3 = new Intl.NumberFormat("pt-PT", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+const pct = p => p <= 0 ? "–" : p < 0.005 ? "<1%" : p > 0.995 && p < 1 ? ">99%" : Math.round(p * 100) + "%";
+const fmtDate = (iso, opts = { day: "numeric", month: "long" }) => new Date(iso + "T12:00:00").toLocaleDateString("pt-PT", opts);
+const $ = id => document.getElementById(id);
+
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+/* Tooltip partilhado */
+const tip = $("tip");
+function showTip(html, x, y) {
+  tip.innerHTML = html;
+  tip.classList.add("show");
+  const r = tip.getBoundingClientRect();
+  const left = Math.min(Math.max(8, x - r.width / 2), innerWidth - r.width - 8);
+  const top = y - r.height - 12 < 8 ? y + 16 : y - r.height - 12;
+  tip.style.left = left + "px";
+  tip.style.top = top + "px";
+}
+function hideTip() { tip.classList.remove("show"); }
+
+/* Os gráficos são desenhados à largura real do contentor (o texto fica sempre legível)
+   e redesenhados quando a largura muda. */
+const renderers = [];
+function responsive(box, draw) {
+  const run = () => { box.innerHTML = ""; draw(Math.max(280, Math.round(box.clientWidth))); };
+  renderers.push(run);
+  run();
+}
+let resizeTimer, lastWidth = innerWidth;
+addEventListener("resize", () => {
+  if (innerWidth === lastWidth) return;
+  lastWidth = innerWidth;
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => renderers.forEach(r => r()), 150);
+});
+
+const SHORT = { "Athletic Club": "Athletic", "Rayo Vallecano": "Rayo", "Racing Santander": "Racing",
+  "Atlético de Madrid": "Atlético", "Real Sociedad": "Sociedad", "Real Madrid": "R. Madrid",
+  "Real Betis": "Betis", "Celta de Vigo": "Celta" };
+const short = t => SHORT[t] || t;
+function bindTip(node, html) {
+  node.addEventListener("pointerenter", e => showTip(html, e.clientX, e.clientY));
+  node.addEventListener("pointermove", e => showTip(html, e.clientX, e.clientY));
+  node.addEventListener("pointerleave", hideTip);
+}
+
+/* Cabeçalho e título */
+const barcaTitle = (DATA.title.find(t => t.barca) || { p: 0 }).p;
+const inHundred = Math.round(barcaTitle * 100);
+$("updated").textContent = `Atualizado a ${fmtDate(DATA.updated)}, com os jogos até à jornada ${DATA.matchday}`;
+$("headline").textContent = `O Barça é campeão em ${inHundred} de cada 100 épocas simuladas`;
+
+/* Riscas: 100 épocas, repartidas pelo maior resto */
+(function stripes() {
+  const raw = DATA.title.map(t => ({ ...t, exact: t.p * 100 }));
+  raw.forEach(t => t.n = Math.floor(t.exact));
+  let left = 100 - raw.reduce((s, t) => s + t.n, 0);
+  [...raw].sort((a, b) => (b.exact - b.n) - (a.exact - a.n)).slice(0, left).forEach(t => t.n++);
+  const groups = raw.filter(t => t.n > 0);
+
+  const box = $("stripes");
+  box.setAttribute("aria-label", groups.map(g => `${g.team}: ${g.n} em 100`).join(", "));
+  const svg = el("svg", { viewBox: "0 0 1000 200", preserveAspectRatio: "none" }, box);
+  const w = 1000 / 100, gap = 2.2;
+  let i = 0;
+  const otherFills = ["var(--other-2)", "var(--other)"];
+  groups.forEach((g, gi) => {
+    const rects = [];
+    for (let k = 0; k < g.n; k++, i++) {
+      const fill = g.barca ? (i % 2 ? "var(--grana)" : "var(--blau)") : otherFills[(gi - 1) % 2 === 0 ? 0 : 1];
+      const r = el("rect", { x: i * w + gap / 2, y: 0, width: w - gap, height: 200, fill, style: `--i:${i}` }, svg);
+      rects.push(r);
+    }
+    const html = `<b>${g.team}</b><br>campeão em ${g.n} de 100 épocas`;
+    rects.forEach(r => {
+      bindTip(r, html);
+      r.addEventListener("pointerenter", () => { box.classList.add("dim"); rects.forEach(x => x.classList.add("on")); });
+      r.addEventListener("pointerleave", () => { box.classList.remove("dim"); rects.forEach(x => x.classList.remove("on")); });
+    });
+  });
+  box.classList.add("animate");
+
+  const legend = $("stripe-legend");
+  groups.forEach(g => {
+    const li = document.createElement("li");
+    li.innerHTML = `<b>${g.n}</b>${g.team}`;
+    legend.appendChild(li);
+  });
+})();
+
+/* Factos */
+(function facts() {
+  const b = DATA.barca;
+  const items = [
+    [`${Math.round(b.exp_points)}`, `pontos esperados no fim da época. Em 90% das simulações, entre ${Math.round(b.p5)} e ${Math.round(b.p95)}.`],
+    [pct(b.p_100), `de probabilidade de chegar aos 100 pontos, o recorde da liga.`],
+    [pct(b.p_goal_record), `de bater os 121 golos do Real Madrid de 2011/12. A média projetada é de ${b.exp_goals} golos.`],
+  ];
+  const dl = $("facts");
+  items.forEach(([n, t]) => {
+    const d = document.createElement("div");
+    d.innerHTML = `<dt>${n}</dt><dd>${t}</dd>`;
+    dl.appendChild(d);
+  });
+})();
+
+/* Golos vs xG */
+(function goals() {
+  const ms = DATA.barca.matches;
+  const sum = (k) => ms.reduce((s, m) => s + m[k], 0);
+  const gf = sum("gf"), xgf = sum("xgf"), ga = sum("ga"), xga = sum("xga");
+  const diff = gf - xgf;
+  const verdict = Math.abs(diff) < 0.15 * xgf
+    ? `A diferença é pequena: as goleadas vêm de criar muitas oportunidades, não de uma eficácia fora do normal. É o tipo de domínio que costuma manter-se.`
+    : diff > 0
+      ? `Marca bastante mais do que o xG sugere. Parte das goleadas pode ser eficácia acima do normal, que tende a baixar.`
+      : `Marca menos do que o xG sugere: o domínio é maior do que os resultados mostram.`;
+  $("goleadas-text").innerHTML = `<p>O xG (golos esperados) mede a qualidade das oportunidades: um remate com xG 0,3 dá golo 3 vezes em 10. Em ${ms.length} jogos o Barça marcou ${gf} golos com ${nf1.format(xgf)} de xG, e sofreu ${ga} com ${nf1.format(xga)} de xG contra.</p><p>${verdict}</p>`;
+
+  const maxY = Math.max(...ms.flatMap(m => [m.gf, m.ga, m.xgf, m.xga]), 4);
+  responsive($("chart-for"), W => draw($("chart-for"), W, "gf", "xgf", "var(--s1)"));
+  responsive($("chart-against"), W => draw($("chart-against"), W, "ga", "xga", "var(--ink-2)"));
+
+  function draw(box, W, gk, xk, color) {
+    const H = 210, m = { t: 10, r: 8, b: 34, l: 26 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+      "aria-label": ms.map(x => `${x.opponent}: ${x[gk]} golos, xG ${nf2.format(x[xk])}`).join("; ") }, box);
+    const top = Math.ceil(maxY);
+    const y = v => m.t + (H - m.t - m.b) * (1 - v / top);
+    const step = (W - m.l - m.r) / ms.length;
+    const x = i => m.l + step * (i + 0.5);
+    for (let v = 0; v <= top; v += top > 6 ? 2 : 1) {
+      el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "ax", "stroke-width": v === 0 ? 1 : 0.5 }, svg);
+      el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = v;
+    }
+    ms.forEach((mt, i) => {
+      const g = el("g", {}, svg);
+      el("line", { x1: x(i), x2: x(i), y1: y(mt[xk]), y2: y(mt[gk]), stroke: "var(--other-2)", "stroke-width": 2 }, g);
+      el("circle", { cx: x(i), cy: y(mt[xk]), r: 5, fill: "var(--surface)", stroke: "var(--ink-2)", "stroke-width": 1.5 }, g);
+      el("circle", { cx: x(i), cy: y(mt[gk]), r: 5.5, fill: color, stroke: "var(--surface)", "stroke-width": 2 }, g);
+      const fs = step < 56 ? "font-size:10px" : "";
+      el("text", { x: x(i), y: H - m.b + 16, "text-anchor": "middle", style: fs }, svg).textContent = short(mt.opponent);
+      el("text", { x: x(i), y: H - m.b + 29, "text-anchor": "middle", style: fs }, svg).textContent = mt.venue === "C" ? "casa" : "fora";
+      const hit = el("rect", { x: x(i) - step / 2, y: m.t, width: step, height: H - m.t - m.b, fill: "transparent" }, g);
+      bindTip(hit, `<b>${mt.venue === "C" ? "Barcelona " + mt.gf + "–" + mt.ga + " " + mt.opponent : mt.opponent + " " + mt.ga + "–" + mt.gf + " Barcelona"}</b><br>${fmtDate(mt.date)}<br>Golos ${mt[gk]}, xG ${nf2.format(mt[xk])}`);
+    });
+  }
+})();
+
+/* Tabela projetada */
+(function projTable() {
+  const t = $("table");
+  const maxP = Math.ceil(Math.max(...DATA.table.map(r => r.p95)) / 10) * 10;
+  t.innerHTML = `<caption class="sr-only">Classificação projetada no fim da época</caption>
+    <thead><tr><th class="team">Equipa</th><th>Pontos agora</th><th>Pontos no fim</th><th style="text-align:left">Intervalo de 90%</th><th>Título</th><th>Top 4</th><th>Descida</th></tr></thead>`;
+  const tb = document.createElement("tbody");
+  DATA.table.forEach((r, i) => {
+    const tr = document.createElement("tr");
+    if (r.barca) tr.className = "barca";
+    const z = p => `<td class="${p < 0.005 ? "dimz" : ""}">${pct(p)}</td>`;
+    tr.innerHTML = `<td class="team"><span class="pos">${i + 1}</span>${r.team}</td><td>${r.points_now}</td><td><b>${nf1.format(r.exp_points)}</b></td><td class="range"></td>${z(r.p_title)}${z(r.p_top4)}${z(r.p_releg)}`;
+    const svg = el("svg", { viewBox: "0 0 300 20", preserveAspectRatio: "none", "aria-label": `entre ${Math.round(r.p5)} e ${Math.round(r.p95)} pontos` }, tr.querySelector(".range"));
+    const sx = v => 4 + (v / maxP) * 292;
+    el("rect", { x: sx(r.p5), y: 7, width: Math.max(2, sx(r.p95) - sx(r.p5)), height: 6, rx: 3, fill: r.barca ? "color-mix(in srgb, var(--grana) 40%, transparent)" : "var(--other)" }, svg);
+    el("rect", { x: sx(r.exp_points) - 1.5, y: 3, width: 3, height: 14, rx: 1, fill: r.barca ? "var(--grana)" : "var(--ink-2)" }, svg);
+    bindTip(tr.querySelector(".range"), `<b>${r.team}</b><br>${nf1.format(r.exp_points)} pontos esperados<br>90% entre ${Math.round(r.p5)} e ${Math.round(r.p95)}`);
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+})();
+
+/* Evolução da probabilidade de título */
+(function history() {
+  const box = $("chart-history");
+  const h = DATA.history.map(r => ({ x: r.games_played / 10, y: r.p_title, date: r.data_until }));
+  responsive(box, W => drawHistory(W));
+  function drawHistory(W) {
+  const H = W < 500 ? 200 : 240, m = { t: 14, r: 16, b: 30, l: 40 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": h.map(p => `jornada ${Math.round(p.x)}: ${pct(p.y)}`).join(", ") }, box);
+  const x = v => m.l + (W - m.l - m.r) * (v / 38);
+  const y = v => m.t + (H - m.t - m.b) * (1 - v);
+  [0, .25, .5, .75, 1].forEach(v => {
+    el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "ax", "stroke-width": v === 0 ? 1 : .5 }, svg);
+    el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = Math.round(v * 100) + "%";
+  });
+  [1, 10, 19, 28, 38].forEach(j => el("text", { x: x(j), y: H - 8, "text-anchor": "middle" }, svg).textContent = `J${j}`);
+  if (h.length > 1) {
+    el("path", { d: h.map((p, i) => `${i ? "L" : "M"}${x(p.x)},${y(p.y)}`).join(""), fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+  }
+  h.forEach((p, i) => {
+    const last = i === h.length - 1;
+    const c = el("circle", { cx: x(p.x), cy: y(p.y), r: last ? 6 : 4, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    bindTip(c, `<b>Jornada ${Math.round(p.x)}</b><br>Título: ${pct(p.y)}<br>dados até ${fmtDate(p.date)}`);
+    if (last) {
+      el("text", { x: x(p.x) + 12, y: y(p.y) + 4, class: "lab-strong" }, svg).textContent = `${pct(p.y)} após a jornada ${Math.round(p.x)}`;
+    }
+  });
+  if (h.length < 2) {
+    const n = document.createElement("p");
+    n.className = "sub";
+    n.style.margin = ".5rem 0 0";
+    n.textContent = "A linha ganha forma a partir da próxima jornada: cada atualização semanal acrescenta um ponto.";
+    box.appendChild(n);
+  }
+  }
+})();
+
+/* Próxima jornada */
+(function nextMatchday() {
+  const box = $("games");
+  const nm = DATA.next_matchday;
+  $("jornada-title").textContent = `Previsões da jornada ${DATA.matchday + 1}`;
+  if (!nm) {
+    box.innerHTML = `<div class="empty"><strong>Ainda não há previsões para a jornada ${DATA.matchday + 1}.</strong> São publicadas assim que o calendário dos jogos sair, antes do primeiro apito.</div>`;
+    return;
+  }
+  const ul = document.createElement("ul");
+  ul.className = "games";
+  [...nm.games].sort((a, b) => b.barca - a.barca || a.date.localeCompare(b.date)).forEach(g => {
+    const li = document.createElement("li");
+    li.className = "game" + (g.barca ? " barca" : "");
+    const seg = (cls, p, lab) => `<span class="${cls}" style="flex:${Math.max(p, .02)}" title="${lab}: ${pct(p)}">${p >= .12 ? pct(p) : ""}</span>`;
+    li.innerHTML = `<div class="teams">${g.home} – ${g.away}<small>${fmtDate(g.date, { weekday: "long", day: "numeric", month: "long" })}</small></div>
+      <div class="split" aria-label="Vitória ${g.home} ${pct(g.p[0])}, empate ${pct(g.p[1])}, vitória ${g.away} ${pct(g.p[2])}">${seg("h", g.p[0], g.home)}${seg("x", g.p[1], "Empate")}${seg("a", g.p[2], g.away)}</div>
+      <div class="score">mais provável <b>${g.score}</b></div>`;
+    ul.appendChild(li);
+  });
+  box.appendChild(ul);
+})();
+
+/* Confiança: backtest */
+(function confidence() {
+  const bt = DATA.backtest, m = bt.metrics;
+  const naive = m["ingénuo"].rps, us = m["modelo"].rps, odds = m["odds"].rps;
+  const share = Math.round((naive - us) / (naive - odds) * 100);
+  $("confianca-text").innerHTML = `<p>Antes de prever esta época, o modelo foi posto à prova em ${bt.games.toLocaleString("pt-PT")} jogos das três épocas anteriores, sempre só com a informação disponível antes de cada jornada.</p><p>Fica a ${share}% do caminho entre um palpite ingénuo e as casas de apostas, que conhecem lesões, onzes e o dinheiro dos apostadores profissionais. Acerta o resultado em ${Math.round(m["modelo"].acerto * 100)}% dos jogos, contra ${Math.round(m["odds"].acerto * 100)}% das casas de apostas.</p>`;
+  $("rps-sub").textContent = "Ranked Probability Score nas três épocas de teste. Menor é melhor.";
+  const rows = [["Palpite ingénuo", naive, ""], ["Este modelo", us, "us"], ["Casas de apostas", odds, ""]];
+  const lo = 0.17, hi = Math.max(naive, us, odds) + 0.005;
+  rows.forEach(([lab, v, cls]) => {
+    const d = document.createElement("div");
+    d.className = "bar-row " + cls;
+    d.innerHTML = `<span>${lab}</span><span class="track"><span class="fill" style="width:${((v - lo) / (hi - lo) * 100).toFixed(1)}%"></span></span><span class="v">${nf3.format(v)}</span>`;
+    $("rps-bars").appendChild(d);
+  });
+  const note = document.createElement("p");
+  note.className = "sub";
+  note.style.margin = ".9rem 0 0";
+  note.textContent = `O eixo começa em ${nf2.format(lo)} para as diferenças serem visíveis.`;
+  $("rps-bars").after(note);
+
+  const box = $("chart-calib");
+  const cal = bt.calibration;
+  responsive(box, W => {
+  const H = Math.round(Math.min(320, W * 0.72)), mg = { t: 10, r: 12, b: 36, l: 40 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": cal.map(c => `previsto ${pct(c.previsto)}, real ${pct(c.real)}`).join("; ") }, box);
+  const x = v => mg.l + (W - mg.l - mg.r) * v;
+  const y = v => mg.t + (H - mg.t - mg.b) * (1 - v);
+  [0, .25, .5, .75, 1].forEach(v => {
+    el("line", { x1: mg.l, x2: W - mg.r, y1: y(v), y2: y(v), class: "ax", "stroke-width": v === 0 ? 1 : .5 }, svg);
+    el("text", { x: mg.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = Math.round(v * 100) + "%";
+    el("text", { x: x(v), y: H - mg.b + 16, "text-anchor": "middle" }, svg).textContent = Math.round(v * 100) + "%";
+  });
+  el("text", { x: (mg.l + W - mg.r) / 2, y: H - 4, "text-anchor": "middle" }, svg).textContent = "probabilidade prevista";
+  el("line", { x1: x(0), y1: y(0), x2: x(1), y2: y(1), stroke: "var(--other-2)", "stroke-width": 1.5, "stroke-dasharray": "4 4" }, svg);
+  el("path", { d: cal.map((c, i) => `${i ? "L" : "M"}${x(c.previsto)},${y(c.real)}`).join(""), fill: "none", stroke: "var(--s1)", "stroke-width": 2 }, svg);
+  cal.forEach(c => {
+    const dot = el("circle", { cx: x(c.previsto), cy: y(c.real), r: 5, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    bindTip(dot, `Previsto <b>${pct(c.previsto)}</b><br>Aconteceu <b>${pct(c.real)}</b><br>${c.n.toLocaleString("pt-PT")} previsões`);
+  });
+  });
+  const fav = cal.filter(c => c.previsto > .6);
+  if (fav.length) {
+    const f = fav[fav.length - 1];
+    const p = document.createElement("p");
+    p.className = "sub";
+    p.style.margin = ".5rem 0 0";
+    p.textContent = `À direita, a linha fica acima da diagonal: quando o modelo dá ${pct(f.previsto)} a um favorito, este ganha ${pct(f.real)} das vezes. O modelo é conservador com os favoritos, o que inclui o Barça.`;
+    box.after(p);
+  }
+})();
+</script>
+</body>
+</html>
