@@ -1,5 +1,7 @@
 """Previsões jogo a jogo para a próxima jornada, e avaliação depois dos jogos."""
 
+import json
+import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -9,24 +11,62 @@ from barca.backtest import implied_probs, log_loss, outcome, rps
 from barca.model import DixonColes
 
 FIXTURES_URL = "https://www.football-data.co.uk/fixtures.csv"
+FIXTUREDOWNLOAD_URL = "https://fixturedownload.com/feed/json/la-liga-2026"
+
+# Nomes em fixturedownload.com → nomes em football-data.co.uk (os que o modelo usa).
+FIXTUREDOWNLOAD_NAMES = {
+    "Athletic Club": "Ath Bilbao", "Atlético de Madrid": "Ath Madrid", "CA Osasuna": "Osasuna",
+    "Celta": "Celta", "Deportivo Alavés": "Alaves", "Elche CF": "Elche", "FC Barcelona": "Barcelona",
+    "Getafe CF": "Getafe", "Levante UD": "Levante", "Málaga CF": "Malaga", "R. Racing Club": "Santander",
+    "RC Deportivo": "La Coruna", "RCD Espanyol de Barcelona": "Espanol", "Rayo Vallecano": "Vallecano",
+    "Real Betis": "Betis", "Real Madrid": "Real Madrid", "Real Sociedad": "Sociedad", "Sevilla FC": "Sevilla",
+    "Valencia CF": "Valencia", "Villarreal CF": "Villarreal",
+}
 
 
-def load_fixtures(division: str = "SP1", manual: Path | None = None) -> pd.DataFrame:
-    """Próximos jogos: do ficheiro manual se existir, senão de football-data.co.uk.
+def load_fixtures(division: str = "SP1", manual: Path | None = None, days_ahead: int = 7) -> pd.DataFrame:
+    """Próximos jogos de La Liga.
 
-    O ficheiro manual é um CSV com colunas date (dd/mm/aaaa), home, away e,
-    opcionalmente, odds_home/odds_draw/odds_away.
+    Ordem de preferência:
+    1. ficheiro manual, se existir (CSV com date dd/mm/aaaa, home, away e, opcionalmente, odds);
+    2. football-data.co.uk, que também traz as odds;
+    3. fixturedownload.com, que tem o calendário completo da época, para quando o
+       football-data.co.uk ainda não publicou os jogos dos próximos dias.
     """
     if manual is not None and manual.exists():
         df = pd.read_csv(manual)
+        df["date"] = pd.to_datetime(df["date"], dayfirst=True)
     else:
         df = pd.read_csv(FIXTURES_URL, encoding="utf-8-sig", encoding_errors="replace")
         df = df[df["Div"] == division].rename(columns={
             "Date": "date", "HomeTeam": "home", "AwayTeam": "away",
             "AvgH": "odds_home", "AvgD": "odds_draw", "AvgA": "odds_away"})
-    df["date"] = pd.to_datetime(df["date"], dayfirst=True)
+        df["date"] = pd.to_datetime(df["date"], dayfirst=True)
+        today = pd.Timestamp.now().normalize()
+        soon = (df["date"] >= today) & (df["date"] <= today + pd.Timedelta(days=days_ahead))
+        if not soon.any():
+            df = load_fixturedownload(days_ahead)
     cols = [c for c in ["date", "home", "away", "odds_home", "odds_draw", "odds_away"] if c in df.columns]
     return df[cols].reset_index(drop=True)
+
+
+def load_fixturedownload(days_ahead: int = 7) -> pd.DataFrame:
+    """Jogos ainda sem resultado nos próximos dias, do calendário de fixturedownload.com.
+
+    As horas vêm em UTC; a data do jogo é a de Madrid, como em football-data.co.uk.
+    """
+    req = urllib.request.Request(FIXTUREDOWNLOAD_URL, headers={"User-Agent": "barca-season-predictor"})
+    games = pd.DataFrame(json.load(urllib.request.urlopen(req, timeout=30)))
+    games = games[games["HomeTeamScore"].isna()]
+    games["date"] = (pd.to_datetime(games["DateUtc"], utc=True).dt.tz_convert("Europe/Madrid")
+                     .dt.tz_localize(None).dt.normalize())
+    today = pd.Timestamp.now().normalize()
+    games = games[(games["date"] >= today) & (games["date"] <= today + pd.Timedelta(days=days_ahead))]
+    unknown = (set(games["HomeTeam"]) | set(games["AwayTeam"])) - set(FIXTUREDOWNLOAD_NAMES)
+    if unknown:
+        raise ValueError(f"Nomes de equipas sem correspondência em FIXTUREDOWNLOAD_NAMES: {sorted(unknown)}")
+    return pd.DataFrame({"date": games["date"], "home": games["HomeTeam"].map(FIXTUREDOWNLOAD_NAMES),
+                         "away": games["AwayTeam"].map(FIXTUREDOWNLOAD_NAMES)}).reset_index(drop=True)
 
 
 def new_fixtures(fixtures: pd.DataFrame, done: pd.DataFrame, today: pd.Timestamp) -> pd.DataFrame:

@@ -1,9 +1,12 @@
+import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from barca.model import DixonColes
-from barca.predict import evaluate_logged, new_fixtures, predict_fixtures
+from barca.predict import FIXTUREDOWNLOAD_NAMES, evaluate_logged, new_fixtures, predict_fixtures
 
 MODEL = DixonColes(teams=["Barcelona", "Getafe"], attack=np.array([0.8, -0.8]),
                    defence=np.array([-0.5, 0.5]), intercept=0.0, home_adv=0.25, rho=-0.05)
@@ -49,3 +52,9 @@ def test_new_fixtures_without_previous_predictions():
     fixtures = FIXTURES[["date", "home", "away"]]
     empty = pd.DataFrame(columns=["date", "home", "away"])
     assert len(new_fixtures(fixtures, empty, today=pd.Timestamp("2026-10-01"))) == 1
+
+
+def test_fixturedownload_names_cover_all_teams():
+    # Os 20 clubes da época têm emblema em site/crests.json, com os nomes de football-data.co.uk.
+    crests = json.loads((Path(__file__).resolve().parents[1] / "site" / "crests.json").read_text(encoding="utf-8"))
+    assert set(FIXTUREDOWNLOAD_NAMES.values()) == set(crests)
