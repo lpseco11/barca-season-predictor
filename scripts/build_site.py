@@ -97,6 +97,11 @@ def latest_matchday(played: pd.DataFrame) -> dict | None:
     return {"created_at": df["created_at"].iloc[0], "games": games}
 
 
+def form(played: pd.DataFrame, team: str, n: int = 5) -> list[str]:
+    """Últimos n resultados da equipa (V/E/D), do mais antigo para o mais recente."""
+    return team_matches(played, team)["result"].tail(n).tolist()
+
+
 def last_update(played: pd.DataFrame) -> str:
     dates = [played["date"].max().date()]
     for f in PRED_DIR.glob("matchday_*.csv"):
@@ -123,7 +128,8 @@ if __name__ == "__main__":
     for proj_rank, (_, r) in enumerate(s.iterrows(), start=1):
         t = r["team"]
         rows.append({
-            "team": name(t), "barca": t == TEAM, "pos_now": position[t], "proj_rank": proj_rank,
+            "team": name(t), "barca": t == TEAM, "crest": crest(t), "form": form(played, t),
+            "pos_now": position[t], "proj_rank": proj_rank,
             "points_now": int(current.loc[t, "points"]), "played": int(current.loc[t, "played"]),
             "gd": int(current.loc[t, "gd"]), "gf": int(current.loc[t, "gf"]),
             "exp_points": round(r["pontos_esperados"], 1),
@@ -146,7 +152,8 @@ if __name__ == "__main__":
             "exp_points": round(pts.mean(), 1), "p5": float(np.percentile(pts, 5)), "p95": float(np.percentile(pts, 95)),
             "p_100": round((pts >= RECORD_POINTS).mean(), 4), "exp_goals": round(goals.mean()),
             "p_goal_record": round((goals >= RECORD_GOALS).mean(), 4),
-            "matches": [{"date": m["date"].strftime("%Y-%m-%d"), "opponent": name(m["opponent"]), "venue": m["venue"],
+            "matches": [{"date": m["date"].strftime("%Y-%m-%d"), "opponent": name(m["opponent"]),
+                         "crest": crest(m["opponent"]), "venue": m["venue"],
                          "gf": int(m["goals_for"]), "ga": int(m["goals_against"]),
                          "xgf": float(m["xg_for"]), "xga": float(m["xg_against"])} for _, m in bm.iterrows()],
         },

@@ -5,21 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Barcelona 26/27</title>
 <meta name="description" content="Previsões semanais para o Barcelona em La Liga 2026/27, com um modelo Dixon-Coles e 10 000 simulações da época.">
+<meta name="theme-color" content="#0b1a3f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet">
 <style>
 :root {
   color-scheme: light;
-  --bg: #f4f6fa;
+  --paper: #f3f5f9;
   --surface: #ffffff;
   --ink: #0f1b3d;
   --ink-2: #46506b;
   --muted: #5f6982;
   --rule: #dce1ea;
   --track: #e8ecf3;
+  --night: #0b1a3f;
+  --night-2: #142862;
+  --on-night: #eef1f8;
+  --on-night-2: #b3bdd6;
+  --night-rule: #263c7a;
   --blau: #004d98;
   --grana: #a50044;
+  --grana-on-night: #c41e5c;
   --groc: #edbb00;
   --other: #cdd4e1;
   --other-2: #aeb8ca;
@@ -27,20 +34,23 @@
   --split-1: #46506b;
   --split-x: #aeb8ca;
   --split-2: #7c869e;
+  --nav-h: 3.25rem;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #0b1430;
+    --paper: #0a1330;
     --surface: #111c3e;
     --ink: #eef1f8;
     --ink-2: #b7bfd3;
     --muted: #8f99b3;
     --rule: #24305a;
     --track: #1a2550;
+    --night: #050c24;
+    --night-2: #101d47;
+    --night-rule: #22356e;
     --blau: #2f6fca;
     --grana: #e0508c;
-    --groc: #f2c94c;
     --other: #2a3763;
     --other-2: #46547f;
     --s1: #e0508c;
@@ -51,16 +61,18 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0b1430;
+  --paper: #0a1330;
   --surface: #111c3e;
   --ink: #eef1f8;
   --ink-2: #b7bfd3;
   --muted: #8f99b3;
   --rule: #24305a;
   --track: #1a2550;
+  --night: #050c24;
+  --night-2: #101d47;
+  --night-rule: #22356e;
   --blau: #2f6fca;
   --grana: #e0508c;
-  --groc: #f2c94c;
   --other: #2a3763;
   --other-2: #46547f;
   --s1: #e0508c;
@@ -69,295 +81,364 @@
   --split-2: #7f8aa8;
 }
 
+/* Blocos azul-noite: os mesmos papéis de cor, com valores para fundo escuro.
+   Os gráficos dentro destes blocos não precisam de saber onde estão. */
+.night {
+  --ink: var(--on-night);
+  --ink-2: var(--on-night-2);
+  --muted: #95a1c2;
+  --rule: var(--night-rule);
+  --surface: var(--night-2);
+  --track: #1b2f6c;
+  --other: #2c4183;
+  --other-2: #4f62a0;
+  --s1: var(--grana-on-night);
+  --grana: var(--grana-on-night);
+  --split-1: #c9d1e6;
+  --split-x: #4f62a0;
+  --split-2: #8593bb;
+  background: var(--night);
+  color: var(--ink);
+}
+
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--nav-h) + 1rem); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--paper);
   color: var(--ink);
   font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
   font-variation-settings: "wdth" 100;
   font-size: 1.0625rem;
   line-height: 1.55;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(11, 26, 63, .15);
 }
 .wrap {
-  max-width: 68rem;
+  max-width: 76rem;
   margin: 0 auto;
-  padding-inline: max(1rem, env(safe-area-inset-left, 0px));
-  padding-block: 0 4rem;
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
 }
-.prose { max-width: 38rem; }
-.num, .cond { font-variation-settings: "wdth" 72; font-variant-numeric: tabular-nums; }
+@media (min-width: 48rem) { .wrap { padding-inline: 2rem; } }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 a:hover { text-decoration-color: var(--grana); }
-:focus-visible { outline: 2px solid var(--grana); outline-offset: 3px; border-radius: 2px; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
+.night :focus-visible, .topbar :focus-visible, .photo-band :focus-visible, footer :focus-visible { outline-color: var(--groc); }
+.skip { position: absolute; left: 1rem; top: -4rem; z-index: 30; background: var(--groc); color: #0b1a3f; padding: .6rem 1rem; border-radius: 4px; font-weight: 600; }
+.skip:focus { top: .75rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* Cabeçalho */
-.masthead {
-  display: flex; flex-wrap: wrap; gap: .5rem 2rem; align-items: baseline; justify-content: space-between;
-  padding-block: 1.25rem; border-bottom: 1px solid var(--rule);
-}
-.wordmark { font-weight: 800; font-size: 1.15rem; font-variation-settings: "wdth" 70; letter-spacing: .01em; margin: 0; }
-.wordmark span { color: var(--muted); font-weight: 500; }
-.updated { color: var(--muted); font-size: .9rem; margin: 0; }
+/* Navegação */
+.topbar { position: sticky; top: 0; z-index: 20; background: var(--night); color: var(--on-night); border-bottom: 1px solid var(--night-rule); padding-top: env(safe-area-inset-top, 0px); }
+.topbar .wrap { display: flex; align-items: center; gap: 1.5rem; min-height: var(--nav-h); }
+.wordmark { font-weight: 800; font-variation-settings: "wdth" 66; font-size: 1.2rem; text-decoration: none; white-space: nowrap; letter-spacing: .01em; }
+.wordmark span { color: var(--on-night-2); font-weight: 500; }
+.topbar nav { margin-left: auto; overflow-x: auto; scrollbar-width: none; mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.topbar nav::-webkit-scrollbar { display: none; }
+.topbar ul { display: flex; gap: .25rem; list-style: none; margin: 0; padding: 0 1rem 0 0; }
+.topbar nav a { display: block; padding: .55rem .7rem; border-radius: 4px; text-decoration: none; font-size: .92rem; color: var(--on-night-2); white-space: nowrap; transition: color .15s, background-color .15s; }
+.topbar nav a:hover { color: var(--on-night); background: var(--night-2); }
+.topbar nav a[aria-current="true"] { color: var(--on-night); box-shadow: inset 0 -2px 0 var(--groc); }
+@media (min-width: 60rem) { .topbar nav { mask-image: none; } }
 
 /* Destaque */
-.hero { padding-block: 3.5rem 1rem; }
+.hero { padding-top: clamp(2.5rem, 6vw, 4.5rem); }
+.hero-grid { display: grid; gap: 2.5rem; align-items: end; }
+@media (min-width: 60rem) { .hero-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 4rem; align-items: center; } }
+.dateline { margin: 0 0 1.25rem; color: var(--ink-2); font-size: .95rem; }
 .hero h1 {
-  font-size: clamp(2.3rem, 6.4vw, 4.6rem);
-  line-height: 1.02;
-  font-weight: 750;
-  font-variation-settings: "wdth" 66;
-  letter-spacing: -.005em;
-  max-width: 15ch;
-  margin: 0 0 2.25rem;
+  margin: 0;
+  font-size: clamp(2.6rem, 7.2vw, 5.6rem);
+  line-height: .98;
+  font-weight: 800;
+  font-variation-settings: "wdth" 62;
+  letter-spacing: -.01em;
   text-wrap: balance;
+  max-width: 13ch;
 }
-.stripes { position: relative; }
-.stripes svg { display: block; width: 100%; height: clamp(150px, 24vw, 230px); }
-.stripes rect { transition: opacity .15s; }
-.stripes.dim rect:not(.on) { opacity: .35; }
-.stripe-legend { display: flex; flex-wrap: wrap; gap: .25rem 1.75rem; margin: .75rem 0 0; padding: 0; list-style: none; font-size: .95rem; color: var(--ink-2); }
-.stripe-legend b { font-weight: 700; color: var(--ink); font-variation-settings: "wdth" 72; font-size: 1.1rem; margin-right: .3rem; }
-.stripe-note { color: var(--muted); font-size: .9rem; margin: .5rem 0 0; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin: 2.25rem 0 0; }
+.facts div { border-top: 2px solid var(--ink); padding-top: .6rem; min-width: 0; }
+.facts dt { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1; font-weight: 750; font-variation-settings: "wdth" 62; font-variant-numeric: tabular-nums; }
+.facts dd { margin: .45rem 0 0; color: var(--ink-2); font-size: .88rem; line-height: 1.4; }
+@media (max-width: 30rem) { .facts { grid-template-columns: 1fr; } }
 
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1.5rem 2.5rem; margin: 3rem 0 0; }
-.facts div { border-top: 3px solid var(--ink); padding-top: .75rem; }
-.facts dt { font-size: 2.6rem; line-height: 1; font-weight: 700; font-variation-settings: "wdth" 66; font-variant-numeric: tabular-nums; }
-.facts dd { margin: .5rem 0 0; color: var(--ink-2); font-size: .95rem; max-width: 22rem; }
+/* Cartão do próximo jogo */
+.next { background: var(--surface); border-radius: 8px; padding: 1.25rem 1.25rem 1.1rem; border-top: 4px solid var(--grana); }
+.next h2 { font-size: .95rem; font-weight: 600; margin: 0 0 1rem; color: var(--ink-2); text-align: center; }
+.matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .5rem; }
+.side { display: flex; flex-direction: column; align-items: center; gap: .5rem; text-align: center; min-width: 0; }
+.side img { width: clamp(56px, 9vw, 84px); height: clamp(56px, 9vw, 84px); object-fit: contain; }
+.side .name { font-weight: 700; font-size: 1.1rem; font-variation-settings: "wdth" 80; line-height: 1.15; overflow-wrap: anywhere; }
+.side .xg { color: var(--muted); font-size: .8rem; }
+.vs { text-align: center; }
+.vs .sc { display: block; font-size: clamp(2.2rem, 5vw, 3rem); font-weight: 800; font-variation-settings: "wdth" 62; line-height: 1; font-variant-numeric: tabular-nums; }
+.vs small { color: var(--muted); font-size: .75rem; }
+.split { display: flex; height: 30px; gap: 2px; }
+.split span { display: flex; align-items: center; justify-content: center; font-size: .82rem; font-weight: 650; font-variation-settings: "wdth" 75; min-width: 0; overflow: hidden; border-radius: 3px; }
+.split .h { background: var(--split-1); color: var(--surface); }
+.split .x { background: var(--split-x); color: var(--ink); }
+.split .a { background: var(--split-2); color: var(--surface); }
+.split .us { background: var(--grana); color: #fff; }
+.next .split { margin-top: 1.25rem; height: 34px; }
+.split-key { display: flex; justify-content: space-between; gap: .5rem; color: var(--muted); font-size: .76rem; margin-top: .35rem; }
+.next-empty { color: var(--ink-2); font-size: .95rem; margin: 0; text-align: center; padding: 1.5rem .5rem; }
+
+/* Riscas: 100 épocas simuladas, de ponta a ponta do ecrã */
+.stripes-bleed { margin-top: clamp(2.5rem, 5vw, 3.5rem); }
+.stripes { position: relative; }
+.stripes svg { display: block; width: 100%; height: clamp(120px, 17vw, 200px); }
+.stripes rect { transition: opacity .15s; }
+.stripes.dim rect:not(.on) { opacity: .3; }
+.stripe-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 2rem; padding-block: .9rem 2.25rem; }
+.stripe-legend { display: flex; flex-wrap: wrap; gap: .25rem 1.75rem; margin: 0; padding: 0; list-style: none; font-size: .95rem; color: var(--ink-2); }
+.stripe-legend b { font-weight: 750; color: var(--ink); font-variation-settings: "wdth" 66; font-size: 1.2rem; margin-right: .3rem; font-variant-numeric: tabular-nums; }
+.stripe-note { color: var(--muted); font-size: .88rem; margin: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .stripes.animate rect { transform-origin: 50% 100%; transform-box: fill-box; animation: rise .6s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i) * 8ms); }
+  @keyframes rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+}
 
 /* Secções */
-section { padding-block: 4.5rem 0; }
-section > h2 {
-  font-size: clamp(1.7rem, 3.4vw, 2.4rem); line-height: 1.1; font-weight: 700;
-  font-variation-settings: "wdth" 70; margin: 0 0 .75rem; max-width: 24ch; text-wrap: balance;
-}
-section > .prose p { margin: 0 0 1rem; color: var(--ink-2); }
-.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem 1.25rem 1rem; margin-top: 1.75rem; }
-.panel h3 { font-size: 1rem; font-weight: 650; margin: 0 0 .25rem; }
-.panel .sub { color: var(--muted); font-size: .88rem; margin: 0 0 .75rem; }
-.duo { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 1.25rem; }
-.duo .panel { margin-top: 0; }
-.key { display: flex; gap: 1.25rem; flex-wrap: wrap; font-size: .85rem; color: var(--ink-2); margin: 0 0 .5rem; padding: 0; list-style: none; }
-.key svg { vertical-align: -2px; margin-right: .35rem; }
+.section { padding-block: clamp(3.5rem, 7vw, 5.5rem) 0; }
+.section h2 { font-size: clamp(1.8rem, 3.6vw, 2.7rem); line-height: 1.05; font-weight: 750; font-variation-settings: "wdth" 66; margin: 0 0 .9rem; text-wrap: balance; }
+.lede { color: var(--ink-2); max-width: 36rem; margin: 0; }
+.lede p { margin: 0 0 .9rem; }
+.split-layout { display: grid; gap: 1.75rem; }
+@media (min-width: 60rem) { .split-layout { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 3.5rem; align-items: start; } }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 1.25rem 1.25rem 1rem; }
+.panel h3 { font-size: 1rem; font-weight: 650; margin: 0 0 .2rem; }
+.panel .sub { color: var(--muted); font-size: .86rem; margin: 0 0 .75rem; }
+.key { display: flex; gap: .4rem 1.25rem; flex-wrap: wrap; font-size: .84rem; color: var(--ink-2); margin: 0 0 .5rem; padding: 0; list-style: none; }
+.key svg { vertical-align: -1px; margin-right: .35rem; }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
 .chart text { fill: var(--muted); font-size: 11px; font-family: inherit; }
 .chart .ax { stroke: var(--rule); }
 .chart .lab-strong { fill: var(--ink); font-weight: 650; }
+.note { color: var(--muted); font-size: .86rem; margin: .75rem 0 0; }
 
-/* Fotografias */
-.photo { margin: 4rem 0 0; }
-.photo img { display: block; width: 100%; height: auto; aspect-ratio: 1600 / 666; object-fit: cover; border-radius: 6px; background: var(--track); }
-.photo figcaption { margin-top: .5rem; color: var(--muted); font-size: .82rem; }
-section .photo { margin-top: 1.75rem; }
+/* Jogos da jornada */
+.games { list-style: none; margin: 1.75rem 0 0; padding: 0; display: grid; gap: .6rem; }
+@media (min-width: 60rem) { .games { grid-template-columns: 1fr 1fr; gap: .75rem 1rem; } }
+.game { display: grid; grid-template-columns: minmax(0, 1fr) minmax(9rem, 1.1fr) 3.2rem; gap: .5rem 1rem; align-items: center; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: .75rem 1rem; }
+.game .teams { display: grid; gap: .15rem; min-width: 0; font-weight: 600; font-size: .95rem; }
+.game .teams span { display: flex; align-items: center; gap: .45rem; min-width: 0; }
+.game .teams span b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.game .teams img { width: 22px; height: 22px; object-fit: contain; flex: none; }
+.game .when { color: var(--muted); font-size: .78rem; font-weight: 400; }
+.game .score { text-align: right; font-size: 1.25rem; font-weight: 750; font-variation-settings: "wdth" 66; font-variant-numeric: tabular-nums; }
+.game .score small { display: block; font-size: .7rem; font-weight: 400; color: var(--muted); font-variation-settings: "wdth" 100; }
+@media (max-width: 34rem) {
+  .game { grid-template-columns: minmax(0, 1fr) auto; }
+  .game .split { grid-column: 1 / -1; grid-row: 2; }
+}
+.empty { margin-top: 1.75rem; padding: 1.5rem; border: 1px dashed var(--other-2); border-radius: 8px; color: var(--ink-2); max-width: 40rem; }
+.empty strong { color: var(--ink); }
 
-/* Ordenação */
-.sorter { display: inline-flex; margin-top: 1.5rem; border: 1px solid var(--rule); border-radius: 6px; padding: 3px; background: var(--surface); gap: 3px; }
-.sorter button { font: inherit; font-size: .92rem; min-height: 44px; padding: 0 1rem; border: 0; border-radius: 4px; background: transparent; color: var(--ink-2); cursor: pointer; }
-.sorter button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
-.sorter button:hover:not([aria-pressed="true"]) { background: var(--track); }
-.sorter + .table-scroll { margin-top: .75rem; }
-th.sep, td.sep { border-left: 1px solid var(--rule); }
-
-/* Tabela */
-.table-scroll { overflow-x: auto; margin-top: 1.75rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
-table { border-collapse: collapse; width: 100%; min-width: 44rem; font-size: .95rem; }
-th, td { padding: .55rem .75rem; text-align: right; white-space: nowrap; }
-th { font-weight: 600; color: var(--muted); font-size: .82rem; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
+/* Classificação */
+.sorter { display: inline-flex; margin-top: 1.5rem; border: 1px solid var(--rule); border-radius: 8px; padding: 3px; background: var(--surface); gap: 3px; }
+.sorter button { font: inherit; font-size: .92rem; min-height: 44px; padding: 0 1rem; border: 0; border-radius: 5px; background: transparent; color: var(--ink-2); cursor: pointer; transition: background-color .15s, color .15s; }
+.sorter button[aria-pressed="true"] { background: var(--ink); color: var(--paper); font-weight: 600; }
+.sorter button:hover:not([aria-pressed="true"]) { background: var(--track); color: var(--ink); }
+.table-scroll { overflow-x: auto; margin-top: .75rem; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 52rem; font-size: .95rem; }
+th, td { padding: .5rem .7rem; text-align: right; white-space: nowrap; }
+th { font-weight: 600; color: var(--muted); font-size: .8rem; border-bottom: 1px solid var(--rule); vertical-align: bottom; }
 td { border-bottom: 1px solid var(--rule); font-variation-settings: "wdth" 80; font-variant-numeric: tabular-nums; }
 tr:last-child td { border-bottom: 0; }
 th:first-child, td:first-child { text-align: left; }
-td.team { font-variation-settings: "wdth" 100; position: sticky; left: 0; background: var(--surface); z-index: 1; }
-td.team .pos { display: inline-block; width: 1.6rem; color: var(--muted); font-variation-settings: "wdth" 80; }
-th.team { position: sticky; left: 0; background: var(--surface); z-index: 1; }
+th.team, td.team { position: sticky; left: 0; background: var(--surface); z-index: 1; }
+td.team { font-variation-settings: "wdth" 100; }
+td.team .in { display: flex; align-items: center; gap: .55rem; }
+td.team .pos { width: 1.4rem; color: var(--muted); font-variation-settings: "wdth" 80; text-align: right; flex: none; }
+td.team img { width: 20px; height: 20px; object-fit: contain; flex: none; }
 tr.barca td { background: color-mix(in srgb, var(--grana) 7%, var(--surface)); }
 tr.barca td.team { font-weight: 700; box-shadow: inset 3px 0 0 var(--grana); }
-td.range { width: 34%; min-width: 14rem; padding-block: .3rem; }
+th.sep, td.sep { border-left: 1px solid var(--rule); }
+td.range { width: 26%; min-width: 11rem; padding-block: .3rem; }
 td.range svg { display: block; width: 100%; height: 20px; }
 .dimz { color: var(--muted); }
+.form { display: inline-flex; gap: 3px; vertical-align: middle; }
+.form i { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 3px; font-style: normal; font-size: .68rem; font-weight: 700; font-variation-settings: "wdth" 80; }
+.form .V { background: var(--ink); color: var(--surface); }
+.form .E { background: var(--track); color: var(--ink); }
+.form .D { background: color-mix(in srgb, var(--grana) 18%, var(--surface)); color: var(--grana); }
 
-/* Jogos */
-.games { list-style: none; margin: 1.75rem 0 0; padding: 0; display: grid; gap: .5rem; }
-.game { display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(12rem, 2fr) auto; gap: .5rem 1.25rem; align-items: center;
-  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: .75rem 1rem; }
-.game.barca { border-left: 3px solid var(--grana); }
-.game .teams { font-weight: 600; }
-.game .teams small { display: block; color: var(--muted); font-weight: 400; font-size: .82rem; }
-.split { display: flex; height: 26px; gap: 2px; }
-.split span { display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; font-variation-settings: "wdth" 75; min-width: 0; overflow: hidden; border-radius: 3px; }
-.split .h { background: var(--split-1); color: var(--bg); }
-.split .x { background: var(--split-x); color: var(--ink); }
-.split .a { background: var(--split-2); color: var(--bg); }
-.split .us { background: var(--grana); color: var(--bg); }
-.game .score { color: var(--ink-2); font-size: .88rem; text-align: right; }
-.game .score b { font-size: 1.15rem; color: var(--ink); font-variation-settings: "wdth" 72; }
-@media (max-width: 40rem) {
-  .game { grid-template-columns: 1fr auto; }
-  .game .split { grid-column: 1 / -1; grid-row: 2; }
-}
-.feature { margin-top: 1.75rem; background: var(--surface); border: 1px solid var(--rule); border-top: 4px solid var(--grana); border-radius: 6px; padding: 1.5rem 1.25rem 1.25rem; }
-.feature .when { color: var(--muted); font-size: .9rem; margin: 0 0 1.25rem; text-align: center; }
-.matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .75rem; }
-.side { display: flex; flex-direction: column; align-items: center; gap: .6rem; text-align: center; min-width: 0; }
-.side img { width: clamp(64px, 14vw, 112px); height: clamp(64px, 14vw, 112px); object-fit: contain; }
-.side .name { font-weight: 700; font-size: clamp(1rem, 2.4vw, 1.35rem); font-variation-settings: "wdth" 80; line-height: 1.15; }
-.side .xg { color: var(--muted); font-size: .85rem; }
-.vs { text-align: center; }
-.vs .sc { display: block; font-size: clamp(2.2rem, 6vw, 3.4rem); font-weight: 750; font-variation-settings: "wdth" 66; line-height: 1; font-variant-numeric: tabular-nums; }
-.vs small { color: var(--muted); font-size: .8rem; }
-.feature .split { height: 34px; margin-top: 1.5rem; }
-.feature .split span { font-size: .9rem; }
-.split-key { display: flex; justify-content: space-between; color: var(--muted); font-size: .8rem; margin-top: .35rem; }
-.game .teams img { width: 22px; height: 22px; object-fit: contain; vertical-align: -5px; margin-right: .4rem; }
-.games-title { font-size: 1rem; font-weight: 650; margin: 2rem 0 0; }
-.empty { margin-top: 1.75rem; padding: 1.5rem; border: 1px dashed var(--other-2); border-radius: 6px; color: var(--ink-2); max-width: 38rem; }
-.empty strong { color: var(--ink); }
-
-/* Comparação de RPS */
+/* Barras de erro (RPS) */
 .bars { display: grid; gap: .6rem; margin: .5rem 0 0; }
-.bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3.5rem; gap: .75rem; align-items: center; font-size: .92rem; }
+.bar-row { display: grid; grid-template-columns: 8.5rem 1fr 3.4rem; gap: .75rem; align-items: center; font-size: .92rem; }
 .bar-row .track { height: 14px; background: var(--track); border-radius: 0 4px 4px 0; position: relative; }
 .bar-row .fill { position: absolute; inset: 0 auto 0 0; background: var(--other-2); border-radius: 0 4px 4px 0; }
 .bar-row.us .fill { background: var(--s1); }
 .bar-row.us { font-weight: 650; }
 .bar-row .v { text-align: right; font-variation-settings: "wdth" 75; font-variant-numeric: tabular-nums; }
+.duo { display: grid; gap: 1rem; margin-top: 1.75rem; }
+@media (min-width: 52rem) { .duo { grid-template-columns: 1fr 1fr; } }
+.model-band { margin-top: clamp(3.5rem, 7vw, 5.5rem); padding-bottom: clamp(3rem, 6vw, 4.5rem); }
+.model-band .section { padding-top: clamp(3rem, 6vw, 4.5rem); }
 
-/* Método */
-.steps { list-style: none; counter-reset: s; margin: 1.75rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1.5rem 2rem; }
-.steps li { counter-increment: s; border-top: 1px solid var(--rule); padding-top: .9rem; color: var(--ink-2); font-size: .95rem; }
-.steps li::before { content: counter(s); display: block; font-size: 2rem; font-weight: 700; font-variation-settings: "wdth" 66; color: var(--grana); line-height: 1; margin-bottom: .5rem; }
-.steps b { display: block; color: var(--ink); font-size: 1.02rem; margin-bottom: .2rem; }
+/* Método, sobre a foto do Camp Nou */
+.photo-band { position: relative; isolation: isolate; color: #eef1f8; overflow: hidden; }
+.photo-band > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+.photo-band::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(11, 26, 63, .82), rgba(11, 26, 63, .94) 55%); }
+.photo-band .section { padding-bottom: 2.5rem; }
+.steps { list-style: none; counter-reset: s; margin: 2rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); gap: 1.5rem 2rem; }
+.steps li { counter-increment: s; border-top: 1px solid rgba(238, 241, 248, .3); padding-top: .9rem; color: #c9d1e6; font-size: .95rem; }
+.steps li::before { content: counter(s); display: block; font-size: 2.2rem; font-weight: 800; font-variation-settings: "wdth" 62; color: var(--groc); line-height: 1; margin-bottom: .5rem; }
+.steps b { display: block; color: #fff; font-size: 1.05rem; margin-bottom: .2rem; }
+.credit { font-size: .78rem; color: #b3bdd6; margin: 2.5rem 0 0; }
 
-footer { margin-top: 5rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .88rem; display: flex; flex-wrap: wrap; gap: .5rem 2rem; justify-content: space-between; }
+footer { background: var(--night); color: var(--on-night-2); font-size: .86rem; padding-bottom: env(safe-area-inset-bottom, 0px); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: .5rem 2rem; justify-content: space-between; padding-block: 1.5rem; border-top: 1px solid var(--night-rule); }
+footer span { max-width: 44rem; }
 
 /* Tooltip */
-.tip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: var(--bg); padding: .45rem .6rem; border-radius: 4px; font-size: .82rem; line-height: 1.35; max-width: 16rem; opacity: 0; transition: opacity .1s; }
+.tip { position: fixed; z-index: 40; pointer-events: none; background: var(--ink); color: var(--paper); padding: .45rem .6rem; border-radius: 4px; font-size: .82rem; line-height: 1.35; max-width: 16rem; opacity: 0; transition: opacity .1s; }
+.tip.on-night { background: #fff; color: #0b1a3f; }
 .tip.show { opacity: 1; }
 .tip b { font-weight: 700; }
-
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-@media (prefers-reduced-motion: no-preference) {
-  .stripes.animate rect { transform-origin: 50% 100%; transform-box: fill-box; animation: rise .6s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i) * 9ms); }
-  @keyframes rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
-}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="masthead">
-    <p class="wordmark">Barcelona 26/27 <span>previsões</span></p>
-    <p class="updated" id="updated"></p>
-  </header>
+<a class="skip" href="#conteudo">Saltar para o conteúdo</a>
 
-  <main>
-    <div class="hero">
-      <h1 id="headline"></h1>
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark" href="#topo" translate="no">Barcelona 26/27 <span>previsões</span></a>
+    <nav aria-label="Secções">
+      <ul>
+        <li><a href="#jornada">Jornada</a></li>
+        <li><a href="#classificacao">Classificação</a></li>
+        <li><a href="#golos">Golos e xG</a></li>
+        <li><a href="#evolucao">Evolução</a></li>
+        <li><a href="#modelo">O modelo</a></li>
+        <li><a href="#metodo">Método</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="conteudo">
+  <section class="hero night" id="topo" aria-labelledby="headline">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="dateline" id="dateline"></p>
+        <h1 id="headline"></h1>
+        <dl class="facts" id="facts"></dl>
+      </div>
+      <aside class="next" id="next-match" aria-labelledby="next-title"></aside>
+    </div>
+    <div class="stripes-bleed">
       <div class="stripes" id="stripes" role="img"></div>
+    </div>
+    <div class="wrap stripe-foot">
       <ul class="stripe-legend" id="stripe-legend"></ul>
       <p class="stripe-note">Cada risca é uma época simulada, com a cor do campeão.</p>
-      <dl class="facts" id="facts"></dl>
     </div>
+  </section>
 
-    <figure class="photo">
-      <img src="img/stands-1600.webp" srcset="img/stands-800.webp 800w, img/stands-1600.webp 1600w" sizes="(max-width: 68rem) 100vw, 68rem"
-           width="1600" height="666" loading="lazy" decoding="async"
-           alt="Bancadas do Camp Nou vazias, com a frase «Més que un club» escrita a amarelo nos lugares azuis">
-      <figcaption>Camp Nou, 2014. Foto de <a href="https://commons.wikimedia.org/wiki/File:2014._Camp_Nou._M%C3%A9s_que_un_club._Barcelona_B40.jpg">Luis Miguel Bugallo Sánchez</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>, recortada.</figcaption>
-    </figure>
+  <section class="wrap section" id="jornada" aria-labelledby="jornada-title">
+    <h2 id="jornada-title">Previsões da jornada</h2>
+    <div class="lede" id="jornada-text"></div>
+    <div id="games"></div>
+  </section>
 
-    <section id="goleadas">
-      <h2>As goleadas são para durar?</h2>
-      <div class="prose" id="goleadas-text"></div>
-      <div class="duo">
-        <div class="panel">
-          <h3>Golos marcados</h3>
-          <p class="sub">Golos e xG em cada jogo</p>
-          <ul class="key" aria-hidden="true">
-            <li><svg width="10" height="10"><circle cx="5" cy="5" r="4.5" fill="var(--s1)"/></svg>Golos</li>
-            <li><svg width="10" height="10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/></svg>xG</li>
-          </ul>
-          <div class="chart" id="chart-for"></div>
+  <section class="wrap section" id="classificacao" aria-labelledby="tabela-title">
+    <h2 id="tabela-title">Classificação e projeção</h2>
+    <div class="lede"><p>À esquerda, a classificação de hoje e a forma nos últimos cinco jogos. À direita, como a época pode acabar: os pontos médios nas simulações e o intervalo onde ficam 90% delas.</p></div>
+    <div class="sorter" role="group" aria-label="Ordenar a tabela">
+      <button type="button" data-sort="now" aria-pressed="true">Classificação atual</button>
+      <button type="button" data-sort="proj" aria-pressed="false">Projeção final</button>
+    </div>
+    <div class="table-scroll"><table id="table"></table></div>
+  </section>
+
+  <section class="wrap section split-layout" id="golos" aria-labelledby="golos-title">
+    <div>
+      <h2 id="golos-title">As goleadas são para durar?</h2>
+      <div class="lede" id="golos-text"></div>
+    </div>
+    <div class="panel">
+      <h3>Golos e xG do Barcelona, jogo a jogo</h3>
+      <p class="sub">Para cima, golos marcados; para baixo, golos sofridos. O traço marca o xG.</p>
+      <ul class="key" aria-hidden="true">
+        <li><svg width="12" height="12"><rect width="12" height="12" rx="2" fill="var(--s1)"/></svg>Golos marcados</li>
+        <li><svg width="12" height="12"><rect width="12" height="12" rx="2" fill="var(--other-2)"/></svg>Golos sofridos</li>
+        <li><svg width="16" height="12"><line x1="0" y1="6" x2="16" y2="6" stroke="var(--ink)" stroke-width="2.5"/></svg>xG</li>
+      </ul>
+      <div class="chart" id="chart-goals"></div>
+    </div>
+  </section>
+
+  <section class="wrap section split-layout" id="evolucao" aria-labelledby="evolucao-title">
+    <div>
+      <h2 id="evolucao-title">Hipóteses de título, jornada a jornada</h2>
+      <div class="lede"><p>Depois de cada jornada, o modelo volta a ser treinado com os resultados novos e a época é simulada outra vez.</p></div>
+    </div>
+    <div class="panel"><div class="chart" id="chart-history"></div></div>
+  </section>
+
+  <div class="night model-band" id="modelo">
+    <section class="wrap section" aria-labelledby="modelo-title">
+      <div class="split-layout">
+        <div>
+          <h2 id="modelo-title">O modelo acerta?</h2>
+          <div class="lede" id="modelo-text"></div>
         </div>
-        <div class="panel">
-          <h3>Golos sofridos</h3>
-          <p class="sub">Golos sofridos e xG do adversário em cada jogo</p>
-          <ul class="key" aria-hidden="true">
-            <li><svg width="10" height="10"><circle cx="5" cy="5" r="4.5" fill="var(--ink-2)"/></svg>Golos</li>
-            <li><svg width="10" height="10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/></svg>xG</li>
-          </ul>
-          <div class="chart" id="chart-against"></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="tabela">
-      <h2>Classificação e projeção</h2>
-      <div class="prose"><p>À esquerda, a classificação de hoje. À direita, como a época pode acabar: os pontos médios nas simulações e o intervalo onde ficam 90% delas. Quanto mais larga a barra, maior a incerteza.</p></div>
-      <div class="sorter" role="group" aria-label="Ordenar a tabela">
-        <button type="button" data-sort="now" aria-pressed="true">Classificação atual</button>
-        <button type="button" data-sort="proj" aria-pressed="false">Projeção final</button>
-      </div>
-      <div class="table-scroll"><table id="table"></table></div>
-    </section>
-
-    <section id="evolucao">
-      <h2>Hipóteses de título, jornada a jornada</h2>
-      <div class="prose"><p>Depois de cada jornada, o modelo volta a ser treinado com os resultados novos e a época é simulada outra vez.</p></div>
-      <div class="panel"><div class="chart" id="chart-history"></div></div>
-    </section>
-
-    <section id="jornada">
-      <h2 id="jornada-title">Próxima jornada</h2>
-      <div class="prose"><p>As previsões ficam guardadas no repositório antes do primeiro jogo, com data e hora, para se poder confirmar depois se acertaram.</p></div>
-      <div id="games"></div>
-    </section>
-
-    <section id="confianca">
-      <h2>O modelo acerta?</h2>
-      <div class="prose" id="confianca-text"></div>
-      <div class="duo">
-        <div class="panel">
-          <h3>Erro das previsões</h3>
-          <p class="sub" id="rps-sub"></p>
-          <div class="bars" id="rps-bars"></div>
-        </div>
-        <div class="panel">
-          <h3>Calibração</h3>
-          <p class="sub">Probabilidade prevista e frequência real. Se o modelo fosse perfeito, os pontos ficavam em cima da diagonal.</p>
-          <div class="chart" id="chart-calib"></div>
+        <div class="duo" style="margin-top:0">
+          <div class="panel">
+            <h3>Erro das previsões</h3>
+            <p class="sub">Ranked Probability Score em 3 épocas de teste. Quanto mais baixo, melhor.</p>
+            <div class="bars" id="rps-bars"></div>
+            <p class="note" id="rps-note"></p>
+          </div>
+          <div class="panel">
+            <h3>Calibração</h3>
+            <p class="sub">Probabilidade prevista e frequência real. Num modelo perfeito, os pontos ficavam em cima da diagonal.</p>
+            <div class="chart" id="chart-calib"></div>
+            <p class="note" id="calib-note"></p>
+          </div>
         </div>
       </div>
     </section>
+  </div>
 
-    <section id="metodo">
-      <h2>Como funciona</h2>
+  <div class="photo-band" id="metodo">
+    <img src="img/stands-1600.webp" srcset="img/stands-800.webp 800w, img/stands-1600.webp 1600w" sizes="100vw"
+         width="1600" height="666" loading="lazy" decoding="async" alt="">
+    <section class="wrap section" aria-labelledby="metodo-title">
+      <h2 id="metodo-title">Como funciona</h2>
       <ol class="steps">
-        <li><b>Dados</b>Resultados, remates, xG e odds de La Liga e da Segunda Divisão desde 2021/22, de football-data.co.uk.</li>
+        <li><b>Dados</b>Resultados, remates, xG e odds de La Liga e da Segunda Divisão desde 2021/22, de football-data.co.uk. O calendário vem também de fixturedownload.com.</li>
         <li><b>Modelo</b>Um modelo Dixon-Coles dá a cada equipa uma força de ataque e outra de defesa. Os jogos recentes contam mais: um jogo com um ano conta metade.</li>
         <li><b>Simulação</b>Os jogos que faltam são simulados 10 000 vezes. Em cada simulação, as forças variam um pouco, porque as estimativas têm margem de erro.</li>
-        <li><b>Validação</b>Antes de ser usado, o modelo previu três épocas completas, semana a semana, só com os jogos já disputados. Os resultados foram comparados com as casas de apostas.</li>
+        <li><b>Validação</b>Antes de ser usado, o modelo previu três épocas completas, semana a semana, só com os jogos já disputados, e foi comparado com as casas de apostas.</li>
       </ol>
+      <p class="credit">Fotografia do Camp Nou (2014) de <a href="https://commons.wikimedia.org/wiki/File:2014._Camp_Nou._M%C3%A9s_que_un_club._Barcelona_B40.jpg">Luis Miguel Bugallo Sánchez</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>, recortada.</p>
     </section>
-  </main>
+  </div>
+</main>
 
-  <footer>
-    <span>Código e previsões no <a href="https://github.com/lpseco11/barca-season-predictor">GitHub</a>.</span>
-    <span>Dados de <a href="https://www.football-data.co.uk/">football-data.co.uk</a>. Fotografias do Wikimedia Commons, com os créditos junto a cada uma. Os emblemas são marcas dos respetivos clubes e aparecem só para identificar as equipas.</span>
-  </footer>
-</div>
+<footer>
+  <div class="wrap">
+    <span>Código e previsões no <a href="https://github.com/lpseco11/barca-season-predictor">GitHub</a>. Dados de <a href="https://www.football-data.co.uk/">football-data.co.uk</a> e <a href="https://fixturedownload.com/">fixturedownload.com</a>.</span>
+    <span>Os emblemas são marcas dos respetivos clubes e aparecem só para identificar as equipas.</span>
+  </div>
+</footer>
 <div class="tip" id="tip" role="tooltip"></div>
 
 <script>
-const DATA = {"updated": "2026-10-08", "data_until": "2026-09-20", "games_played": 69, "matchday": 7, "title": [{"team": "Barcelona", "barca": true, "p": 0.8257}, {"team": "Real Madrid", "barca": false, "p": 0.1384}, {"team": "Atlético de Madrid", "barca": false, "p": 0.03}, {"team": "Real Betis", "barca": false, "p": 0.0054}, {"team": "Villarreal", "barca": false, "p": 0.0003}, {"team": "Sevilla", "barca": false, "p": 0.0002}], "barca": {"exp_points": 91.4, "p5": 79.0, "p95": 102.04999999999927, "p_100": 0.124, "exp_goals": 114, "p_goal_record": 0.2922, "matches": [{"date": "2026-08-23", "opponent": "Elche", "venue": "F", "gf": 5, "ga": 0, "xgf": 4.38, "xga": 0.7}, {"date": "2026-08-27", "opponent": "Athletic Club", "venue": "C", "gf": 2, "ga": 0, "xgf": 3.91, "xga": 0.25}, {"date": "2026-08-31", "opponent": "Rayo Vallecano", "venue": "C", "gf": 5, "ga": 2, "xgf": 2.83, "xga": 1.09}, {"date": "2026-09-06", "opponent": "Valencia", "venue": "F", "gf": 5, "ga": 0, "xgf": 4.08, "xga": 0.66}, {"date": "2026-09-13", "opponent": "Levante", "venue": "F", "gf": 4, "ga": 2, "xgf": 2.59, "xga": 2.42}, {"date": "2026-09-16", "opponent": "Racing Santander", "venue": "C", "gf": 7, "ga": 2, "xgf": 6.74, "xga": 1.98}, {"date": "2026-09-19", "opponent": "Sevilla", "venue": "F", "gf": 3, "ga": 1, "xgf": 3.26, "xga": 0.45}]}, "table": [{"team": "Barcelona", "barca": true, "pos_now": 1, "proj_rank": 1, "points_now": 21, "played": 7, "gd": 24, "gf": 31, "exp_points": 91.4, "p5": 79.0, "p95": 102.04999999999927, "p_title": 0.8257, "p_top4": 0.9996, "p_releg": 0.0}, {"team": "Real Madrid", "barca": false, "pos_now": 4, "proj_rank": 2, "points_now": 15, "played": 7, "gd": 10, "gf": 18, "exp_points": 80.1, "p5": 67.0, "p95": 92.0, "p_title": 0.1384, "p_top4": 0.9703, "p_releg": 0.0}, {"team": "Atlético de Madrid", "barca": false, "pos_now": 2, "proj_rank": 3, "points_now": 16, "played": 7, "gd": 9, "gf": 16, "exp_points": 73.8, "p5": 61.0, "p95": 87.0, "p_title": 0.03, "p_top4": 0.8789, "p_releg": 0.0}, {"team": "Real Betis", "barca": false, "pos_now": 3, "proj_rank": 4, "points_now": 16, "played": 7, "gd": 2, "gf": 9, "exp_points": 65.6, "p5": 52.0, "p95": 79.0, "p_title": 0.0054, "p_top4": 0.5277, "p_releg": 0.0004}, {"team": "Villarreal", "barca": false, "pos_now": 9, "proj_rank": 5, "points_now": 8, "played": 7, "gd": 1, "gf": 13, "exp_points": 60.3, "p5": 47.0, "p95": 74.0, "p_title": 0.0003, "p_top4": 0.276, "p_releg": 0.0021}, {"team": "Athletic Club", "barca": false, "pos_now": 10, "proj_rank": 6, "points_now": 8, "played": 6, "gd": 1, "gf": 7, "exp_points": 54.4, "p5": 40.0, "p95": 69.0, "p_title": 0.0, "p_top4": 0.102, "p_releg": 0.0215}, {"team": "Real Sociedad", "barca": false, "pos_now": 8, "proj_rank": 7, "points_now": 10, "played": 7, "gd": -4, "gf": 9, "exp_points": 53.1, "p5": 40.0, "p95": 67.0, "p_title": 0.0, "p_top4": 0.0678, "p_releg": 0.027}, {"team": "Sevilla", "barca": false, "pos_now": 5, "proj_rank": 8, "points_now": 13, "played": 7, "gd": 1, "gf": 10, "exp_points": 52.0, "p5": 39.0, "p95": 66.0, "p_title": 0.0002, "p_top4": 0.0544, "p_releg": 0.0363}, {"team": "Celta de Vigo", "barca": false, "pos_now": 14, "proj_rank": 9, "points_now": 7, "played": 7, "gd": 2, "gf": 8, "exp_points": 49.6, "p5": 36.0, "p95": 63.0, "p_title": 0.0, "p_top4": 0.0337, "p_releg": 0.058}, {"team": "Alavés", "barca": false, "pos_now": 6, "proj_rank": 10, "points_now": 11, "played": 7, "gd": 5, "gf": 11, "exp_points": 48.7, "p5": 35.0, "p95": 62.0, "p_title": 0.0, "p_top4": 0.0244, "p_releg": 0.0698}, {"team": "Rayo Vallecano", "barca": false, "pos_now": 12, "proj_rank": 11, "points_now": 8, "played": 7, "gd": -5, "gf": 11, "exp_points": 47.4, "p5": 34.0, "p95": 61.0, "p_title": 0.0, "p_top4": 0.0184, "p_releg": 0.1028}, {"team": "Osasuna", "barca": false, "pos_now": 13, "proj_rank": 12, "points_now": 8, "played": 7, "gd": -7, "gf": 6, "exp_points": 44.8, "p5": 31.0, "p95": 59.0, "p_title": 0.0, "p_top4": 0.0098, "p_releg": 0.1732}, {"team": "Espanyol", "barca": false, "pos_now": 15, "proj_rank": 13, "points_now": 7, "played": 7, "gd": 0, "gf": 10, "exp_points": 43.6, "p5": 30.0, "p95": 57.0, "p_title": 0.0, "p_top4": 0.0072, "p_releg": 0.1938}, {"team": "Levante", "barca": false, "pos_now": 17, "proj_rank": 14, "points_now": 5, "played": 6, "gd": -4, "gf": 8, "exp_points": 43.4, "p5": 30.0, "p95": 57.0, "p_title": 0.0, "p_top4": 0.0061, "p_releg": 0.2117}, {"team": "Deportivo", "barca": false, "pos_now": 7, "proj_rank": 15, "points_now": 10, "played": 7, "gd": 2, "gf": 10, "exp_points": 43.3, "p5": 30.0, "p95": 58.0, "p_title": 0.0, "p_top4": 0.0099, "p_releg": 0.2246}, {"team": "Getafe", "barca": false, "pos_now": 11, "proj_rank": 16, "points_now": 8, "played": 7, "gd": -3, "gf": 4, "exp_points": 43.1, "p5": 31.0, "p95": 56.0, "p_title": 0.0, "p_top4": 0.0049, "p_releg": 0.2135}, {"team": "Valencia", "barca": false, "pos_now": 19, "proj_rank": 17, "points_now": 4, "played": 7, "gd": -9, "gf": 4, "exp_points": 41.5, "p5": 29.0, "p95": 55.0, "p_title": 0.0, "p_top4": 0.0035, "p_releg": 0.2863}, {"team": "Elche", "barca": false, "pos_now": 18, "proj_rank": 18, "points_now": 5, "played": 7, "gd": -6, "gf": 11, "exp_points": 41.2, "p5": 28.0, "p95": 55.0, "p_title": 0.0, "p_top4": 0.0035, "p_releg": 0.2977}, {"team": "Racing Santander", "barca": false, "pos_now": 16, "proj_rank": 19, "points_now": 7, "played": 7, "gd": -10, "gf": 11, "exp_points": 38.7, "p5": 26.0, "p95": 52.0, "p_title": 0.0, "p_top4": 0.0017, "p_releg": 0.4319}, {"team": "Málaga", "barca": false, "pos_now": 20, "proj_rank": 20, "points_now": 3, "played": 7, "gd": -9, "gf": 3, "exp_points": 33.9, "p5": 21.0, "p95": 48.0, "p_title": 0.0, "p_top4": 0.0002, "p_releg": 0.6494}], "history": [{"run_date": "2026-10-06", "data_until": "2026-09-20", "games_played": 69, "p_title": 0.826, "expected_points": 91.3901, "p_100_points": 0.1238, "expected_goals": 114.4781}], "next_matchday": {"created_at": "2026-10-08T17:15:53", "games": [{"date": "2026-10-09", "home": "Málaga", "away": "Espanyol", "home_crest": {"src": "img/crests/malaga.webp", "w": 226, "h": 256}, "away_crest": {"src": "img/crests/espanol.webp", "w": 181, "h": 256}, "barca": false, "p": [0.3743, 0.2744, 0.3513], "xg": [1.26, 1.22], "score": "1-1"}, {"date": "2026-10-10", "home": "Rayo Vallecano", "away": "Athletic Club", "home_crest": {"src": "img/crests/vallecano.webp", "w": 256, "h": 228}, "away_crest": {"src": "img/crests/ath-bilbao.webp", "w": 226, "h": 256}, "barca": false, "p": [0.3671, 0.297, 0.3359], "xg": [1.12, 1.05], "score": "1-1"}, {"date": "2026-10-10", "home": "Alavés", "away": "Atlético de Madrid", "home_crest": {"src": "img/crests/alaves.webp", "w": 256, "h": 256}, "away_crest": {"src": "img/crests/ath-madrid.webp", "w": 199, "h": 256}, "barca": false, "p": [0.2554, 0.2618, 0.4829], "xg": [1.02, 1.51], "score": "1-1"}, {"date": "2026-10-10", "home": "Barcelona", "away": "Getafe", "home_crest": {"src": "img/crests/barcelona.webp", "w": 252, "h": 256}, "away_crest": {"src": "img/crests/getafe.webp", "w": 245, "h": 256}, "barca": true, "p": [0.7751, 0.156, 0.0689], "xg": [2.33, 0.55], "score": "2-0"}, {"date": "2026-10-10", "home": "Real Madrid", "away": "Villarreal", "home_crest": {"src": "img/crests/real-madrid.webp", "w": 190, "h": 256}, "away_crest": {"src": "img/crests/villarreal.webp", "w": 206, "h": 256}, "barca": false, "p": [0.6572, 0.1809, 0.1619], "xg": [2.45, 1.16], "score": "2-1"}, {"date": "2026-10-11", "home": "Elche", "away": "Celta de Vigo", "home_crest": {"src": "img/crests/elche.webp", "w": 209, "h": 256}, "away_crest": {"src": "img/crests/celta.webp", "w": 145, "h": 256}, "barca": false, "p": [0.3549, 0.2629, 0.3822], "xg": [1.31, 1.36], "score": "1-1"}, {"date": "2026-10-11", "home": "Real Sociedad", "away": "Deportivo", "home_crest": {"src": "img/crests/sociedad.webp", "w": 222, "h": 256}, "away_crest": {"src": "img/crests/la-coruna.webp", "w": 209, "h": 256}, "barca": false, "p": [0.5488, 0.2366, 0.2146], "xg": [1.77, 1.02], "score": "1-1"}, {"date": "2026-10-11", "home": "Real Betis", "away": "Osasuna", "home_crest": {"src": "img/crests/betis.webp", "w": 256, "h": 218}, "away_crest": {"src": "img/crests/osasuna.webp", "w": 191, "h": 256}, "barca": false, "p": [0.5791, 0.2332, 0.1876], "xg": [1.79, 0.91], "score": "1-0"}, {"date": "2026-10-11", "home": "Racing Santander", "away": "Valencia", "home_crest": {"src": "img/crests/santander.webp", "w": 183, "h": 256}, "away_crest": {"src": "img/crests/valencia.webp", "w": 203, "h": 256}, "barca": false, "p": [0.4106, 0.2376, 0.3518], "xg": [1.65, 1.52], "score": "1-1"}, {"date": "2026-10-12", "home": "Levante", "away": "Sevilla", "home_crest": {"src": "img/crests/levante.webp", "w": 210, "h": 256}, "away_crest": {"src": "img/crests/sevilla.webp", "w": 210, "h": 256}, "barca": false, "p": [0.4219, 0.2601, 0.3179], "xg": [1.46, 1.23], "score": "1-1"}]}, "backtest": {"games": 1140, "metrics": {"ingénuo": {"rps": 0.2249, "acerto": 0.4579}, "modelo": {"rps": 0.1942, "acerto": 0.5289}, "odds": {"rps": 0.1894, "acerto": 0.55}}, "calibration": [{"n": 98, "previsto": 0.074, "real": 0.051}, {"n": 457, "previsto": 0.1598, "real": 0.1313}, {"n": 1223, "previsto": 0.2562, "real": 0.2559}, {"n": 723, "previsto": 0.3393, "real": 0.3223}, {"n": 403, "previsto": 0.4456, "real": 0.4615}, {"n": 255, "previsto": 0.5471, "real": 0.5608}, {"n": 141, "previsto": 0.6402, "real": 0.7021}, {"n": 95, "previsto": 0.7462, "real": 0.8211}, {"n": 25, "previsto": 0.8306, "real": 0.92}]}};
+const DATA = {"updated": "2026-10-08", "data_until": "2026-09-20", "games_played": 69, "matchday": 7, "title": [{"team": "Barcelona", "barca": true, "p": 0.8257}, {"team": "Real Madrid", "barca": false, "p": 0.1384}, {"team": "Atlético de Madrid", "barca": false, "p": 0.03}, {"team": "Real Betis", "barca": false, "p": 0.0054}, {"team": "Villarreal", "barca": false, "p": 0.0003}, {"team": "Sevilla", "barca": false, "p": 0.0002}], "barca": {"exp_points": 91.4, "p5": 79.0, "p95": 102.04999999999927, "p_100": 0.124, "exp_goals": 114, "p_goal_record": 0.2922, "matches": [{"date": "2026-08-23", "opponent": "Elche", "crest": {"src": "img/crests/elche.webp", "w": 209, "h": 256}, "venue": "F", "gf": 5, "ga": 0, "xgf": 4.38, "xga": 0.7}, {"date": "2026-08-27", "opponent": "Athletic Club", "crest": {"src": "img/crests/ath-bilbao.webp", "w": 226, "h": 256}, "venue": "C", "gf": 2, "ga": 0, "xgf": 3.91, "xga": 0.25}, {"date": "2026-08-31", "opponent": "Rayo Vallecano", "crest": {"src": "img/crests/vallecano.webp", "w": 256, "h": 228}, "venue": "C", "gf": 5, "ga": 2, "xgf": 2.83, "xga": 1.09}, {"date": "2026-09-06", "opponent": "Valencia", "crest": {"src": "img/crests/valencia.webp", "w": 203, "h": 256}, "venue": "F", "gf": 5, "ga": 0, "xgf": 4.08, "xga": 0.66}, {"date": "2026-09-13", "opponent": "Levante", "crest": {"src": "img/crests/levante.webp", "w": 210, "h": 256}, "venue": "F", "gf": 4, "ga": 2, "xgf": 2.59, "xga": 2.42}, {"date": "2026-09-16", "opponent": "Racing Santander", "crest": {"src": "img/crests/santander.webp", "w": 183, "h": 256}, "venue": "C", "gf": 7, "ga": 2, "xgf": 6.74, "xga": 1.98}, {"date": "2026-09-19", "opponent": "Sevilla", "crest": {"src": "img/crests/sevilla.webp", "w": 210, "h": 256}, "venue": "F", "gf": 3, "ga": 1, "xgf": 3.26, "xga": 0.45}]}, "table": [{"team": "Barcelona", "barca": true, "crest": {"src": "img/crests/barcelona.webp", "w": 252, "h": 256}, "form": ["V", "V", "V", "V", "V"], "pos_now": 1, "proj_rank": 1, "points_now": 21, "played": 7, "gd": 24, "gf": 31, "exp_points": 91.4, "p5": 79.0, "p95": 102.04999999999927, "p_title": 0.8257, "p_top4": 0.9996, "p_releg": 0.0}, {"team": "Real Madrid", "barca": false, "crest": {"src": "img/crests/real-madrid.webp", "w": 190, "h": 256}, "form": ["V", "D", "V", "V", "D"], "pos_now": 4, "proj_rank": 2, "points_now": 15, "played": 7, "gd": 10, "gf": 18, "exp_points": 80.1, "p5": 67.0, "p95": 92.0, "p_title": 0.1384, "p_top4": 0.9703, "p_releg": 0.0}, {"team": "Atlético de Madrid", "barca": false, "crest": {"src": "img/crests/ath-madrid.webp", "w": 199, "h": 256}, "form": ["V", "D", "V", "V", "V"], "pos_now": 2, "proj_rank": 3, "points_now": 16, "played": 7, "gd": 9, "gf": 16, "exp_points": 73.8, "p5": 61.0, "p95": 87.0, "p_title": 0.03, "p_top4": 0.8789, "p_releg": 0.0}, {"team": "Real Betis", "barca": false, "crest": {"src": "img/crests/betis.webp", "w": 256, "h": 218}, "form": ["D", "V", "V", "V", "E"], "pos_now": 3, "proj_rank": 4, "points_now": 16, "played": 7, "gd": 2, "gf": 9, "exp_points": 65.6, "p5": 52.0, "p95": 79.0, "p_title": 0.0054, "p_top4": 0.5277, "p_releg": 0.0004}, {"team": "Villarreal", "barca": false, "crest": {"src": "img/crests/villarreal.webp", "w": 206, "h": 256}, "form": ["D", "D", "D", "V", "V"], "pos_now": 9, "proj_rank": 5, "points_now": 8, "played": 7, "gd": 1, "gf": 13, "exp_points": 60.3, "p5": 47.0, "p95": 74.0, "p_title": 0.0003, "p_top4": 0.276, "p_releg": 0.0021}, {"team": "Athletic Club", "barca": false, "crest": {"src": "img/crests/ath-bilbao.webp", "w": 226, "h": 256}, "form": ["D", "V", "V", "E", "E"], "pos_now": 10, "proj_rank": 6, "points_now": 8, "played": 6, "gd": 1, "gf": 7, "exp_points": 54.4, "p5": 40.0, "p95": 69.0, "p_title": 0.0, "p_top4": 0.102, "p_releg": 0.0215}, {"team": "Real Sociedad", "barca": false, "crest": {"src": "img/crests/sociedad.webp", "w": 222, "h": 256}, "form": ["V", "E", "V", "D", "V"], "pos_now": 8, "proj_rank": 7, "points_now": 10, "played": 7, "gd": -4, "gf": 9, "exp_points": 53.1, "p5": 40.0, "p95": 67.0, "p_title": 0.0, "p_top4": 0.0678, "p_releg": 0.027}, {"team": "Sevilla", "barca": false, "crest": {"src": "img/crests/sevilla.webp", "w": 210, "h": 256}, "form": ["D", "E", "V", "V", "D"], "pos_now": 5, "proj_rank": 8, "points_now": 13, "played": 7, "gd": 1, "gf": 10, "exp_points": 52.0, "p5": 39.0, "p95": 66.0, "p_title": 0.0002, "p_top4": 0.0544, "p_releg": 0.0363}, {"team": "Celta de Vigo", "barca": false, "crest": {"src": "img/crests/celta.webp", "w": 145, "h": 256}, "form": ["D", "E", "E", "E", "V"], "pos_now": 14, "proj_rank": 9, "points_now": 7, "played": 7, "gd": 2, "gf": 8, "exp_points": 49.6, "p5": 36.0, "p95": 63.0, "p_title": 0.0, "p_top4": 0.0337, "p_releg": 0.058}, {"team": "Alavés", "barca": false, "crest": {"src": "img/crests/alaves.webp", "w": 256, "h": 256}, "form": ["V", "V", "D", "D", "E"], "pos_now": 6, "proj_rank": 10, "points_now": 11, "played": 7, "gd": 5, "gf": 11, "exp_points": 48.7, "p5": 35.0, "p95": 62.0, "p_title": 0.0, "p_top4": 0.0244, "p_releg": 0.0698}, {"team": "Rayo Vallecano", "barca": false, "crest": {"src": "img/crests/vallecano.webp", "w": 256, "h": 228}, "form": ["D", "V", "D", "V", "E"], "pos_now": 12, "proj_rank": 11, "points_now": 8, "played": 7, "gd": -5, "gf": 11, "exp_points": 47.4, "p5": 34.0, "p95": 61.0, "p_title": 0.0, "p_top4": 0.0184, "p_releg": 0.1028}, {"team": "Osasuna", "barca": false, "crest": {"src": "img/crests/osasuna.webp", "w": 191, "h": 256}, "form": ["V", "D", "D", "D", "E"], "pos_now": 13, "proj_rank": 12, "points_now": 8, "played": 7, "gd": -7, "gf": 6, "exp_points": 44.8, "p5": 31.0, "p95": 59.0, "p_title": 0.0, "p_top4": 0.0098, "p_releg": 0.1732}, {"team": "Espanyol", "barca": false, "crest": {"src": "img/crests/espanol.webp", "w": 181, "h": 256}, "form": ["D", "E", "V", "D", "D"], "pos_now": 15, "proj_rank": 13, "points_now": 7, "played": 7, "gd": 0, "gf": 10, "exp_points": 43.6, "p5": 30.0, "p95": 57.0, "p_title": 0.0, "p_top4": 0.0072, "p_releg": 0.1938}, {"team": "Levante", "barca": false, "crest": {"src": "img/crests/levante.webp", "w": 210, "h": 256}, "form": ["E", "V", "E", "D", "D"], "pos_now": 17, "proj_rank": 14, "points_now": 5, "played": 6, "gd": -4, "gf": 8, "exp_points": 43.4, "p5": 30.0, "p95": 57.0, "p_title": 0.0, "p_top4": 0.0061, "p_releg": 0.2117}, {"team": "Deportivo", "barca": false, "crest": {"src": "img/crests/la-coruna.webp", "w": 209, "h": 256}, "form": ["V", "V", "E", "D", "E"], "pos_now": 7, "proj_rank": 15, "points_now": 10, "played": 7, "gd": 2, "gf": 10, "exp_points": 43.3, "p5": 30.0, "p95": 58.0, "p_title": 0.0, "p_top4": 0.0099, "p_releg": 0.2246}, {"team": "Getafe", "barca": false, "crest": {"src": "img/crests/getafe.webp", "w": 245, "h": 256}, "form": ["D", "E", "E", "D", "V"], "pos_now": 11, "proj_rank": 16, "points_now": 8, "played": 7, "gd": -3, "gf": 4, "exp_points": 43.1, "p5": 31.0, "p95": 56.0, "p_title": 0.0, "p_top4": 0.0049, "p_releg": 0.2135}, {"team": "Valencia", "barca": false, "crest": {"src": "img/crests/valencia.webp", "w": 203, "h": 256}, "form": ["D", "D", "D", "V", "D"], "pos_now": 19, "proj_rank": 17, "points_now": 4, "played": 7, "gd": -9, "gf": 4, "exp_points": 41.5, "p5": 29.0, "p95": 55.0, "p_title": 0.0, "p_top4": 0.0035, "p_releg": 0.2863}, {"team": "Elche", "barca": false, "crest": {"src": "img/crests/elche.webp", "w": 209, "h": 256}, "form": ["D", "D", "E", "D", "V"], "pos_now": 18, "proj_rank": 18, "points_now": 5, "played": 7, "gd": -6, "gf": 11, "exp_points": 41.2, "p5": 28.0, "p95": 55.0, "p_title": 0.0, "p_top4": 0.0035, "p_releg": 0.2977}, {"team": "Racing Santander", "barca": false, "crest": {"src": "img/crests/santander.webp", "w": 183, "h": 256}, "form": ["V", "D", "V", "D", "D"], "pos_now": 16, "proj_rank": 19, "points_now": 7, "played": 7, "gd": -10, "gf": 11, "exp_points": 38.7, "p5": 26.0, "p95": 52.0, "p_title": 0.0, "p_top4": 0.0017, "p_releg": 0.4319}, {"team": "Málaga", "barca": false, "crest": {"src": "img/crests/malaga.webp", "w": 226, "h": 256}, "form": ["D", "E", "E", "D", "D"], "pos_now": 20, "proj_rank": 20, "points_now": 3, "played": 7, "gd": -9, "gf": 3, "exp_points": 33.9, "p5": 21.0, "p95": 48.0, "p_title": 0.0, "p_top4": 0.0002, "p_releg": 0.6494}], "history": [{"run_date": "2026-10-06", "data_until": "2026-09-20", "games_played": 69, "p_title": 0.826, "expected_points": 91.3901, "p_100_points": 0.1238, "expected_goals": 114.4781}], "next_matchday": {"created_at": "2026-10-08T17:15:53", "games": [{"date": "2026-10-09", "home": "Málaga", "away": "Espanyol", "home_crest": {"src": "img/crests/malaga.webp", "w": 226, "h": 256}, "away_crest": {"src": "img/crests/espanol.webp", "w": 181, "h": 256}, "barca": false, "p": [0.3743, 0.2744, 0.3513], "xg": [1.26, 1.22], "score": "1-1"}, {"date": "2026-10-10", "home": "Rayo Vallecano", "away": "Athletic Club", "home_crest": {"src": "img/crests/vallecano.webp", "w": 256, "h": 228}, "away_crest": {"src": "img/crests/ath-bilbao.webp", "w": 226, "h": 256}, "barca": false, "p": [0.3671, 0.297, 0.3359], "xg": [1.12, 1.05], "score": "1-1"}, {"date": "2026-10-10", "home": "Alavés", "away": "Atlético de Madrid", "home_crest": {"src": "img/crests/alaves.webp", "w": 256, "h": 256}, "away_crest": {"src": "img/crests/ath-madrid.webp", "w": 199, "h": 256}, "barca": false, "p": [0.2554, 0.2618, 0.4829], "xg": [1.02, 1.51], "score": "1-1"}, {"date": "2026-10-10", "home": "Barcelona", "away": "Getafe", "home_crest": {"src": "img/crests/barcelona.webp", "w": 252, "h": 256}, "away_crest": {"src": "img/crests/getafe.webp", "w": 245, "h": 256}, "barca": true, "p": [0.7751, 0.156, 0.0689], "xg": [2.33, 0.55], "score": "2-0"}, {"date": "2026-10-10", "home": "Real Madrid", "away": "Villarreal", "home_crest": {"src": "img/crests/real-madrid.webp", "w": 190, "h": 256}, "away_crest": {"src": "img/crests/villarreal.webp", "w": 206, "h": 256}, "barca": false, "p": [0.6572, 0.1809, 0.1619], "xg": [2.45, 1.16], "score": "2-1"}, {"date": "2026-10-11", "home": "Elche", "away": "Celta de Vigo", "home_crest": {"src": "img/crests/elche.webp", "w": 209, "h": 256}, "away_crest": {"src": "img/crests/celta.webp", "w": 145, "h": 256}, "barca": false, "p": [0.3549, 0.2629, 0.3822], "xg": [1.31, 1.36], "score": "1-1"}, {"date": "2026-10-11", "home": "Real Sociedad", "away": "Deportivo", "home_crest": {"src": "img/crests/sociedad.webp", "w": 222, "h": 256}, "away_crest": {"src": "img/crests/la-coruna.webp", "w": 209, "h": 256}, "barca": false, "p": [0.5488, 0.2366, 0.2146], "xg": [1.77, 1.02], "score": "1-1"}, {"date": "2026-10-11", "home": "Real Betis", "away": "Osasuna", "home_crest": {"src": "img/crests/betis.webp", "w": 256, "h": 218}, "away_crest": {"src": "img/crests/osasuna.webp", "w": 191, "h": 256}, "barca": false, "p": [0.5791, 0.2332, 0.1876], "xg": [1.79, 0.91], "score": "1-0"}, {"date": "2026-10-11", "home": "Racing Santander", "away": "Valencia", "home_crest": {"src": "img/crests/santander.webp", "w": 183, "h": 256}, "away_crest": {"src": "img/crests/valencia.webp", "w": 203, "h": 256}, "barca": false, "p": [0.4106, 0.2376, 0.3518], "xg": [1.65, 1.52], "score": "1-1"}, {"date": "2026-10-12", "home": "Levante", "away": "Sevilla", "home_crest": {"src": "img/crests/levante.webp", "w": 210, "h": 256}, "away_crest": {"src": "img/crests/sevilla.webp", "w": 210, "h": 256}, "barca": false, "p": [0.4219, 0.2601, 0.3179], "xg": [1.46, 1.23], "score": "1-1"}]}, "backtest": {"games": 1140, "metrics": {"ingénuo": {"rps": 0.2249, "acerto": 0.4579}, "modelo": {"rps": 0.1942, "acerto": 0.5289}, "odds": {"rps": 0.1894, "acerto": 0.55}}, "calibration": [{"n": 98, "previsto": 0.074, "real": 0.051}, {"n": 457, "previsto": 0.1598, "real": 0.1313}, {"n": 1223, "previsto": 0.2562, "real": 0.2559}, {"n": 723, "previsto": 0.3393, "real": 0.3223}, {"n": 403, "previsto": 0.4456, "real": 0.4615}, {"n": 255, "previsto": 0.5471, "real": 0.5608}, {"n": 141, "previsto": 0.6402, "real": 0.7021}, {"n": 95, "previsto": 0.7462, "real": 0.8211}, {"n": 25, "previsto": 0.8306, "real": 0.92}]}};
 
 const NS = "http://www.w3.org/2000/svg";
 const nf1 = new Intl.NumberFormat("pt-PT", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const nf2 = new Intl.NumberFormat("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const nf3 = new Intl.NumberFormat("pt-PT", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 const pct = p => p <= 0 ? "–" : p < 0.005 ? "<1%" : p > 0.995 && p < 1 ? ">99%" : Math.round(p * 100) + "%";
-const fmtDate = (iso, opts = { day: "numeric", month: "long" }) => new Date(iso + "T12:00:00").toLocaleDateString("pt-PT", opts);
+const fmtDate = (iso, opts = { day: "numeric", month: "long" }) => new Date(iso.length > 10 ? iso : iso + "T12:00:00").toLocaleDateString("pt-PT", opts);
+const fmtTime = iso => new Date(iso).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
 const $ = id => document.getElementById(id);
+const md = DATA.matchday;
 
 function el(tag, attrs = {}, parent) {
   const e = document.createElementNS(NS, tag);
@@ -365,22 +446,27 @@ function el(tag, attrs = {}, parent) {
   if (parent) parent.appendChild(e);
   return e;
 }
+const img = (c, team, size, extra = "") => c ? `<img src="${c.src}" width="${size}" height="${size}" alt="Emblema do ${team}" loading="lazy" decoding="async" ${extra}>` : "";
 
-/* Tooltip partilhado */
+/* Tooltip partilhado (inverte as cores dentro dos blocos azul-noite) */
 const tip = $("tip");
-function showTip(html, x, y) {
+function showTip(html, x, y, onNight) {
   tip.innerHTML = html;
+  tip.classList.toggle("on-night", !!onNight);
   tip.classList.add("show");
   const r = tip.getBoundingClientRect();
-  const left = Math.min(Math.max(8, x - r.width / 2), innerWidth - r.width - 8);
-  const top = y - r.height - 12 < 8 ? y + 16 : y - r.height - 12;
-  tip.style.left = left + "px";
-  tip.style.top = top + "px";
+  tip.style.left = Math.min(Math.max(8, x - r.width / 2), innerWidth - r.width - 8) + "px";
+  tip.style.top = (y - r.height - 12 < 8 ? y + 16 : y - r.height - 12) + "px";
 }
 function hideTip() { tip.classList.remove("show"); }
+function bindTip(node, html) {
+  const onNight = () => !!node.closest(".night");
+  node.addEventListener("pointerenter", e => showTip(html, e.clientX, e.clientY, onNight()));
+  node.addEventListener("pointermove", e => showTip(html, e.clientX, e.clientY, onNight()));
+  node.addEventListener("pointerleave", hideTip);
+}
 
-/* Os gráficos são desenhados à largura real do contentor (o texto fica sempre legível)
-   e redesenhados quando a largura muda. */
+/* Gráficos desenhados à largura real do contentor, redesenhados quando ela muda */
 const renderers = [];
 function responsive(box, draw) {
   const run = () => { box.innerHTML = ""; draw(Math.max(280, Math.round(box.clientWidth))); };
@@ -399,38 +485,68 @@ const SHORT = { "Athletic Club": "Athletic", "Rayo Vallecano": "Rayo", "Racing S
   "Atlético de Madrid": "Atlético", "Real Sociedad": "Sociedad", "Real Madrid": "R. Madrid",
   "Real Betis": "Betis", "Celta de Vigo": "Celta" };
 const short = t => SHORT[t] || t;
-function bindTip(node, html) {
-  node.addEventListener("pointerenter", e => showTip(html, e.clientX, e.clientY));
-  node.addEventListener("pointermove", e => showTip(html, e.clientX, e.clientY));
-  node.addEventListener("pointerleave", hideTip);
+
+const seg = (cls, p, lab) => `<span class="${cls}" style="flex:${Math.max(p, .02)}" title="${lab}: ${pct(p)}">${p >= .12 ? pct(p) : ""}</span>`;
+function splitBar(g) {
+  const us = side => g.barca && g[side] === "Barcelona" ? " us" : "";
+  return `<div class="split" role="img" aria-label="Vitória do ${g.home} ${pct(g.p[0])}, empate ${pct(g.p[1])}, vitória do ${g.away} ${pct(g.p[2])}">${seg("h" + us("home"), g.p[0], g.home)}${seg("x", g.p[1], "Empate")}${seg("a" + us("away"), g.p[2], g.away)}</div>`;
 }
 
-/* Cabeçalho e título */
+/* Destaque */
 const barcaTitle = (DATA.title.find(t => t.barca) || { p: 0 }).p;
-const inHundred = Math.round(barcaTitle * 100);
-$("updated").textContent = `Com os resultados até à ${DATA.matchday}.ª jornada (${fmtDate(DATA.data_until)})`;
-$("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão em ${inHundred}`;
+$("dateline").textContent = `La Liga 2026/27, com os resultados até à ${md}.ª jornada (${fmtDate(DATA.data_until)})`;
+$("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão em ${Math.round(barcaTitle * 100)}`;
+
+(function facts() {
+  const b = DATA.barca;
+  const items = [
+    [`${Math.round(b.exp_points)}`, `pontos no fim da época, em média; entre ${Math.round(b.p5)} e ${Math.round(b.p95)} em 90% das simulações`],
+    [pct(b.p_100), `de hipóteses de chegar aos 100 pontos, o recorde de La Liga`],
+    [pct(b.p_goal_record), `de hipóteses de passar os 121 golos do Real Madrid de 2011/12`],
+  ];
+  items.forEach(([n, t]) => {
+    const d = document.createElement("div");
+    d.innerHTML = `<dt>${n}</dt><dd>${t}</dd>`;
+    $("facts").appendChild(d);
+  });
+})();
+
+(function nextMatch() {
+  const box = $("next-match");
+  const g = DATA.next_matchday && DATA.next_matchday.games.find(x => x.barca);
+  if (!g) {
+    box.innerHTML = `<h2 id="next-title">Próximo jogo</h2><p class="next-empty">A previsão aparece aqui quando o calendário da ${md + 1}.ª jornada for publicado.</p>`;
+    return;
+  }
+  box.innerHTML = `<h2 id="next-title">Próximo jogo, ${fmtDate(g.date, { weekday: "long", day: "numeric", month: "long" })}</h2>
+    <div class="matchup">
+      <div class="side">${img(g.home_crest, g.home, 84, 'fetchpriority="high" loading="eager"')}<span class="name">${g.home}</span><span class="xg">${nf1.format(g.xg[0])} golos esperados</span></div>
+      <div class="vs"><span class="sc">${g.score.replace("-", "–")}</span><small>resultado<br>mais provável</small></div>
+      <div class="side">${img(g.away_crest, g.away, 84, 'fetchpriority="high" loading="eager"')}<span class="name">${g.away}</span><span class="xg">${nf1.format(g.xg[1])} golos esperados</span></div>
+    </div>
+    ${splitBar(g)}
+    <div class="split-key"><span>Vitória do ${short(g.home)}</span><span>Empate</span><span>Vitória do ${short(g.away)}</span></div>`;
+})();
 
 /* Riscas: 100 épocas, repartidas pelo maior resto */
 (function stripes() {
   const raw = DATA.title.map(t => ({ ...t, exact: t.p * 100 }));
   raw.forEach(t => t.n = Math.floor(t.exact));
-  let left = 100 - raw.reduce((s, t) => s + t.n, 0);
+  const left = 100 - raw.reduce((s, t) => s + t.n, 0);
   [...raw].sort((a, b) => (b.exact - b.n) - (a.exact - a.n)).slice(0, left).forEach(t => t.n++);
   const groups = raw.filter(t => t.n > 0);
 
   const box = $("stripes");
-  box.setAttribute("aria-label", groups.map(g => `${g.team}: ${g.n} em 100`).join(", "));
+  box.setAttribute("aria-label", "Campeão em 100 épocas simuladas: " + groups.map(g => `${g.team} ${g.n}`).join(", "));
   const svg = el("svg", { viewBox: "0 0 1000 200", preserveAspectRatio: "none" }, box);
-  const w = 1000 / 100, gap = 2.2;
+  const w = 10, gap = 2.6;
   let i = 0;
-  const otherFills = ["var(--other-2)", "var(--other)"];
+  const otherFills = ["#aeb8ca", "#7f8db3"];
   groups.forEach((g, gi) => {
     const rects = [];
     for (let k = 0; k < g.n; k++, i++) {
-      const fill = g.barca ? (i % 2 ? "var(--grana)" : "var(--blau)") : otherFills[(gi - 1) % 2 === 0 ? 0 : 1];
-      const r = el("rect", { x: i * w + gap / 2, y: 0, width: w - gap, height: 200, fill, style: `--i:${i}` }, svg);
-      rects.push(r);
+      const fill = g.barca ? (i % 2 ? "var(--grana-on-night)" : "#1f63c0") : otherFills[(gi - 1) % 2];
+      rects.push(el("rect", { x: i * w + gap / 2, y: 0, width: w - gap, height: 200, fill, style: `--i:${i}` }, svg));
     }
     const html = `<b>${g.team}</b><br>campeão em ${g.n} das 100 épocas`;
     rects.forEach(r => {
@@ -440,72 +556,39 @@ $("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão e
     });
   });
   box.classList.add("animate");
-
-  const legend = $("stripe-legend");
   groups.forEach(g => {
     const li = document.createElement("li");
     li.innerHTML = `<b>${g.n}</b>${g.team}`;
-    legend.appendChild(li);
+    $("stripe-legend").appendChild(li);
   });
 })();
 
-/* Factos */
-(function facts() {
-  const b = DATA.barca;
-  const items = [
-    [`${Math.round(b.exp_points)}`, `pontos no final da época, em média. Em 90% das simulações, o Barcelona fica entre ${Math.round(b.p5)} e ${Math.round(b.p95)}.`],
-    [pct(b.p_100), `de hipóteses de chegar aos 100 pontos, o recorde de La Liga.`],
-    [pct(b.p_goal_record), `de hipóteses de passar os 121 golos do Real Madrid de 2011/12. Em média, as simulações dão-lhe ${b.exp_goals}.`],
-  ];
-  const dl = $("facts");
-  items.forEach(([n, t]) => {
-    const d = document.createElement("div");
-    d.innerHTML = `<dt>${n}</dt><dd>${t}</dd>`;
-    dl.appendChild(d);
-  });
-})();
-
-/* Golos vs xG */
-(function goals() {
-  const ms = DATA.barca.matches;
-  const sum = (k) => ms.reduce((s, m) => s + m[k], 0);
-  const gf = sum("gf"), xgf = sum("xgf"), ga = sum("ga"), xga = sum("xga");
-  const diff = gf - xgf;
-  const verdict = Math.abs(diff) < 0.15 * xgf
-    ? `Marca pouco mais do que as ocasiões criadas fariam prever. As goleadas vêm sobretudo de criar muitas ocasiões em cada jogo, e isso costuma manter-se ao longo de uma época.`
-    : diff > 0
-      ? `Marca bem mais do que o xG faria prever. Parte das goleadas deve-se a uma eficácia acima do normal, que costuma baixar com o tempo.`
-      : `Marca menos do que o xG faria prever, por isso os resultados ainda ficam aquém do que a equipa cria.`;
-  $("goleadas-text").innerHTML = `<p>O xG (golos esperados) mede a qualidade das ocasiões: um remate com 0,3 de xG dá golo três vezes em cada dez. Em ${ms.length} jogos, o Barcelona marcou ${gf} golos para ${nf1.format(xgf)} de xG e sofreu ${ga} para ${nf1.format(xga)}.</p><p>${verdict}</p>`;
-
-  const maxY = Math.max(...ms.flatMap(m => [m.gf, m.ga, m.xgf, m.xga]), 4);
-  responsive($("chart-for"), W => draw($("chart-for"), W, "gf", "xgf", "var(--s1)"));
-  responsive($("chart-against"), W => draw($("chart-against"), W, "ga", "xga", "var(--ink-2)"));
-
-  function draw(box, W, gk, xk, color) {
-    const H = 210, m = { t: 10, r: 8, b: 34, l: 26 };
-    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
-      "aria-label": ms.map(x => `${x.opponent}: ${x[gk]} golos, xG ${nf2.format(x[xk])}`).join("; ") }, box);
-    const top = Math.ceil(maxY);
-    const y = v => m.t + (H - m.t - m.b) * (1 - v / top);
-    const step = (W - m.l - m.r) / ms.length;
-    const x = i => m.l + step * (i + 0.5);
-    for (let v = 0; v <= top; v += top > 6 ? 2 : 1) {
-      el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "ax", "stroke-width": v === 0 ? 1 : 0.5 }, svg);
-      el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = v;
-    }
-    ms.forEach((mt, i) => {
-      const g = el("g", {}, svg);
-      el("line", { x1: x(i), x2: x(i), y1: y(mt[xk]), y2: y(mt[gk]), stroke: "var(--other-2)", "stroke-width": 2 }, g);
-      el("circle", { cx: x(i), cy: y(mt[xk]), r: 5, fill: "var(--surface)", stroke: "var(--ink-2)", "stroke-width": 1.5 }, g);
-      el("circle", { cx: x(i), cy: y(mt[gk]), r: 5.5, fill: color, stroke: "var(--surface)", "stroke-width": 2 }, g);
-      const fs = step < 56 ? "font-size:10px" : "";
-      el("text", { x: x(i), y: H - m.b + 16, "text-anchor": "middle", style: fs }, svg).textContent = short(mt.opponent);
-      el("text", { x: x(i), y: H - m.b + 29, "text-anchor": "middle", style: fs }, svg).textContent = mt.venue === "C" ? "casa" : "fora";
-      const hit = el("rect", { x: x(i) - step / 2, y: m.t, width: step, height: H - m.t - m.b, fill: "transparent" }, g);
-      bindTip(hit, `<b>${mt.venue === "C" ? "Barcelona " + mt.gf + "–" + mt.ga + " " + mt.opponent : mt.opponent + " " + mt.ga + "–" + mt.gf + " Barcelona"}</b><br>${fmtDate(mt.date)}<br>Golos ${mt[gk]}, xG ${nf2.format(mt[xk])}`);
-    });
+/* Jornada */
+(function matchday() {
+  const nm = DATA.next_matchday;
+  $("jornada-title").textContent = `Previsões para a ${md + 1}.ª jornada`;
+  if (!nm) {
+    $("jornada-text").innerHTML = `<p>As previsões ficam guardadas no repositório antes do primeiro jogo, com data e hora, para se poder confirmar depois se acertaram.</p>`;
+    $("games").innerHTML = `<div class="empty"><strong>As previsões da ${md + 1}.ª jornada ainda não saíram.</strong> Ficam disponíveis quando o calendário for publicado, antes do primeiro jogo.</div>`;
+    return;
   }
+  $("jornada-text").innerHTML = `<p>Registadas a ${fmtDate(nm.created_at)} às ${fmtTime(nm.created_at)}, antes do primeiro jogo. O ficheiro fica no repositório para se poder confirmar depois se acertaram.</p>`;
+  const ul = document.createElement("ul");
+  ul.className = "games";
+  [...nm.games].sort((a, b) => b.barca - a.barca || a.date.localeCompare(b.date)).forEach(g => {
+    const li = document.createElement("li");
+    li.className = "game";
+    if (g.barca) li.style.borderLeft = "3px solid var(--grana)";
+    li.innerHTML = `<div class="teams">
+        <span>${img(g.home_crest, g.home, 22)}<b>${g.home}</b></span>
+        <span>${img(g.away_crest, g.away, 22)}<b>${g.away}</b></span>
+        <span class="when">${fmtDate(g.date, { weekday: "short", day: "numeric", month: "short" })}</span>
+      </div>
+      ${splitBar(g)}
+      <div class="score">${g.score.replace("-", "–")}<small>mais provável</small></div>`;
+    ul.appendChild(li);
+  });
+  $("games").appendChild(ul);
 })();
 
 /* Classificação e projeção */
@@ -514,11 +597,12 @@ $("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão e
   const lo = Math.floor(Math.min(...DATA.table.map(r => r.p5)) / 10) * 10;
   const hi = Math.ceil(Math.max(...DATA.table.map(r => r.p95)) / 10) * 10;
   const sx = v => 4 + ((v - lo) / (hi - lo)) * 292;
+  const formWord = { V: "vitória", E: "empate", D: "derrota" };
 
   function render(mode) {
     const rows = [...DATA.table].sort((a, b) => mode === "now" ? a.pos_now - b.pos_now : a.proj_rank - b.proj_rank);
     t.innerHTML = `<caption class="sr-only">${mode === "now" ? "Classificação atual" : "Classificação projetada no fim da época"}, com a projeção de cada equipa</caption>
-      <thead><tr><th class="team">Equipa</th><th>J</th><th>DG</th><th>Pts</th>
+      <thead><tr><th class="team">Equipa</th><th>J</th><th>DG</th><th>Pts</th><th style="text-align:left">Forma</th>
       <th class="sep">Pontos no fim</th><th style="text-align:left">Intervalo de 90%</th><th>Título</th><th>Top 4</th><th>Descida</th></tr></thead>`;
     const tb = document.createElement("tbody");
     rows.forEach(r => {
@@ -527,7 +611,9 @@ $("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão e
       const z = p => `<td class="${p < 0.005 ? "dimz" : ""}">${pct(p)}</td>`;
       const pos = mode === "now" ? r.pos_now : r.proj_rank;
       const gd = r.gd > 0 ? "+" + r.gd : r.gd;
-      tr.innerHTML = `<td class="team"><span class="pos">${pos}</span>${r.team}</td><td>${r.played}</td><td>${gd}</td><td><b>${r.points_now}</b></td>
+      const form = `<span class="form" role="img" aria-label="Últimos jogos: ${r.form.map(f => formWord[f]).join(", ")}">${r.form.map(f => `<i class="${f}" aria-hidden="true">${f}</i>`).join("")}</span>`;
+      tr.innerHTML = `<td class="team"><span class="in"><span class="pos">${pos}</span>${img(r.crest, r.team, 20)}${r.team}</span></td>
+        <td>${r.played}</td><td>${gd}</td><td><b>${r.points_now}</b></td><td style="text-align:left">${form}</td>
         <td class="sep"><b>${nf1.format(r.exp_points)}</b></td><td class="range"></td>${z(r.p_title)}${z(r.p_top4)}${z(r.p_releg)}`;
       const svg = el("svg", { viewBox: "0 0 300 20", preserveAspectRatio: "none", "aria-label": `entre ${Math.round(r.p5)} e ${Math.round(r.p95)} pontos` }, tr.querySelector(".range"));
       el("rect", { x: sx(r.p5), y: 7, width: Math.max(2, sx(r.p95) - sx(r.p5)), height: 6, rx: 3, fill: r.barca ? "color-mix(in srgb, var(--grana) 40%, transparent)" : "var(--other)" }, svg);
@@ -545,103 +631,94 @@ $("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão e
   render("now");
 })();
 
+/* Golos e xG: marcados para cima, sofridos para baixo */
+(function goals() {
+  const ms = DATA.barca.matches;
+  const sum = k => ms.reduce((s, m) => s + m[k], 0);
+  const gf = sum("gf"), xgf = sum("xgf"), ga = sum("ga"), xga = sum("xga");
+  const diff = gf - xgf;
+  const verdict = Math.abs(diff) < 0.15 * xgf
+    ? `Marca pouco mais do que as ocasiões criadas fariam prever. As goleadas vêm sobretudo de criar muitas ocasiões em cada jogo, e isso costuma manter-se ao longo de uma época.`
+    : diff > 0
+      ? `Marca bem mais do que o xG faria prever. Parte das goleadas deve-se a uma eficácia acima do normal, que costuma baixar com o tempo.`
+      : `Marca menos do que o xG faria prever, por isso os resultados ainda ficam aquém do que a equipa cria.`;
+  $("golos-text").innerHTML = `<p>O xG (golos esperados) mede a qualidade das ocasiões: um remate com 0,3 de xG dá golo três vezes em cada dez.</p><p>Em ${ms.length} jogos, o Barcelona marcou ${gf} golos para ${nf1.format(xgf)} de xG e sofreu ${ga} para ${nf1.format(xga)}. ${verdict}</p>`;
+
+  const box = $("chart-goals");
+  responsive(box, W => {
+    const top = Math.max(4, Math.ceil(Math.max(...ms.map(m => Math.max(m.gf, m.xgf)))));
+    const bot = Math.max(3, Math.ceil(Math.max(...ms.map(m => Math.max(m.ga, m.xga)))));
+    const crestSize = W < 520 ? 22 : 28;
+    const m = { t: 10, r: 6, b: crestSize + 26, l: 26 };
+    const unit = 22;
+    const H = m.t + (top + bot) * unit + m.b;
+    const zero = m.t + top * unit;
+    const y = v => zero - v * unit;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+      "aria-label": ms.map(x => `${x.opponent}: marcou ${x.gf} (xG ${nf2.format(x.xgf)}), sofreu ${x.ga} (xG ${nf2.format(x.xga)})`).join("; ") }, box);
+    for (let v = -bot; v <= top; v++) {
+      if (v % 2) continue;
+      el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "ax", "stroke-width": v === 0 ? 1.2 : .5 }, svg);
+      el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = Math.abs(v);
+    }
+    const step = (W - m.l - m.r) / ms.length;
+    const bw = Math.min(30, step * .46);
+    ms.forEach((mt, i) => {
+      const cx = m.l + step * (i + .5);
+      const g = el("g", {}, svg);
+      if (mt.gf > 0) el("rect", { x: cx - bw / 2, y: y(mt.gf), width: bw, height: zero - y(mt.gf) - 1, rx: 3, fill: "var(--s1)" }, g);
+      if (mt.ga > 0) el("rect", { x: cx - bw / 2, y: zero + 1, width: bw, height: y(-mt.ga) - zero - 1, rx: 3, fill: "var(--other-2)" }, g);
+      el("line", { x1: cx - bw / 2 - 5, x2: cx + bw / 2 + 5, y1: y(mt.xgf), y2: y(mt.xgf), stroke: "var(--ink)", "stroke-width": 2.5, "stroke-linecap": "round" }, g);
+      el("line", { x1: cx - bw / 2 - 5, x2: cx + bw / 2 + 5, y1: y(-mt.xga), y2: y(-mt.xga), stroke: "var(--ink)", "stroke-width": 2.5, "stroke-linecap": "round" }, g);
+      if (mt.crest) {
+        el("image", { href: mt.crest.src, x: cx - crestSize / 2, y: H - m.b + 6, width: crestSize, height: crestSize }, svg);
+      }
+      el("text", { x: cx, y: H - 4, "text-anchor": "middle" }, svg).textContent = mt.venue === "C" ? "casa" : "fora";
+      const hit = el("rect", { x: cx - step / 2, y: m.t, width: step, height: H - m.t, fill: "transparent" }, g);
+      const score = mt.venue === "C" ? `Barcelona ${mt.gf}–${mt.ga} ${mt.opponent}` : `${mt.opponent} ${mt.ga}–${mt.gf} Barcelona`;
+      bindTip(hit, `<b>${score}</b><br>${fmtDate(mt.date)}<br>xG ${nf2.format(mt.xgf)} a favor, ${nf2.format(mt.xga)} contra`);
+    });
+  });
+})();
+
 /* Evolução da probabilidade de título */
 (function history() {
   const box = $("chart-history");
   const h = DATA.history.map(r => ({ x: r.games_played / 10, y: r.p_title, date: r.data_until }));
-  responsive(box, W => drawHistory(W));
-  function drawHistory(W) {
-  const H = W < 500 ? 200 : 240, m = { t: 14, r: 16, b: 30, l: 40 };
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": h.map(p => `jornada ${Math.round(p.x)}: ${pct(p.y)}`).join(", ") }, box);
-  const x = v => m.l + (W - m.l - m.r) * (v / 38);
-  const y = v => m.t + (H - m.t - m.b) * (1 - v);
-  [0, .25, .5, .75, 1].forEach(v => {
-    el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "ax", "stroke-width": v === 0 ? 1 : .5 }, svg);
-    el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = Math.round(v * 100) + "%";
-  });
-  [1, 10, 19, 28, 38].forEach(j => el("text", { x: x(j), y: H - 8, "text-anchor": "middle" }, svg).textContent = `J${j}`);
-  if (h.length > 1) {
-    el("path", { d: h.map((p, i) => `${i ? "L" : "M"}${x(p.x)},${y(p.y)}`).join(""), fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
-  }
-  h.forEach((p, i) => {
-    const last = i === h.length - 1;
-    const c = el("circle", { cx: x(p.x), cy: y(p.y), r: last ? 6 : 4, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
-    bindTip(c, `<b>${Math.round(p.x)}.ª jornada</b><br>Título: ${pct(p.y)}<br>jogos até ${fmtDate(p.date)}`);
-    if (last) {
-      el("text", { x: x(p.x) + 12, y: y(p.y) + 4, class: "lab-strong" }, svg).textContent = `${pct(p.y)} após a ${Math.round(p.x)}.ª jornada`;
+  responsive(box, W => {
+    const H = W < 500 ? 200 : 250, m = { t: 14, r: 16, b: 30, l: 40 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": h.map(p => `${Math.round(p.x)}.ª jornada: ${pct(p.y)}`).join(", ") }, box);
+    const x = v => m.l + (W - m.l - m.r) * (v / 38);
+    const y = v => m.t + (H - m.t - m.b) * (1 - v);
+    [0, .25, .5, .75, 1].forEach(v => {
+      el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: "ax", "stroke-width": v === 0 ? 1 : .5 }, svg);
+      el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = Math.round(v * 100) + "%";
+    });
+    [1, 10, 19, 28, 38].forEach(j => el("text", { x: x(j), y: H - 8, "text-anchor": "middle" }, svg).textContent = `J${j}`);
+    if (h.length > 1) {
+      el("path", { d: h.map((p, i) => `${i ? "L" : "M"}${x(p.x)},${y(p.y)}`).join(""), fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    }
+    h.forEach((p, i) => {
+      const last = i === h.length - 1;
+      const c = el("circle", { cx: x(p.x), cy: y(p.y), r: last ? 6 : 4, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+      bindTip(c, `<b>${Math.round(p.x)}.ª jornada</b><br>Título: ${pct(p.y)}<br>jogos até ${fmtDate(p.date)}`);
+      if (last) el("text", { x: x(p.x) + 12, y: y(p.y) + 4, class: "lab-strong" }, svg).textContent = `${pct(p.y)} após a ${Math.round(p.x)}.ª jornada`;
+    });
+    if (h.length < 2) {
+      const n = document.createElement("p");
+      n.className = "note";
+      n.textContent = "Por agora há só um ponto. A partir da próxima jornada, cada atualização acrescenta outro.";
+      box.appendChild(n);
     }
   });
-  if (h.length < 2) {
-    const n = document.createElement("p");
-    n.className = "sub";
-    n.style.margin = ".5rem 0 0";
-    n.textContent = "Por agora há só um ponto. A partir da próxima jornada, cada atualização acrescenta outro.";
-    box.appendChild(n);
-  }
-  }
 })();
 
-/* Próxima jornada */
-(function nextMatchday() {
-  const box = $("games");
-  const nm = DATA.next_matchday;
-  $("jornada-title").textContent = `Previsões para a ${DATA.matchday + 1}.ª jornada`;
-  if (!nm) {
-    box.innerHTML = `<div class="empty"><strong>As previsões da ${DATA.matchday + 1}.ª jornada ainda não saíram.</strong> Ficam disponíveis quando o calendário for publicado, antes do primeiro jogo.</div>`;
-    return;
-  }
-  const img = (c, team, cls = "") => c ? `<img src="${c.src}" width="${c.w}" height="${c.h}" alt="Emblema do ${team}" loading="lazy" decoding="async" class="${cls}">` : "";
-  const seg = (cls, p, lab) => `<span class="${cls}" style="flex:${Math.max(p, .02)}" title="${lab}: ${pct(p)}">${p >= .12 ? pct(p) : ""}</span>`;
-  // No jogo do Barcelona, a fatia da vitória do Barcelona fica com a cor do clube.
-  const splitBar = g => {
-    const us = side => g.barca && g[side] === "Barcelona" ? " us" : "";
-    return `<div class="split" role="img" aria-label="Vitória do ${g.home} ${pct(g.p[0])}, empate ${pct(g.p[1])}, vitória do ${g.away} ${pct(g.p[2])}">${seg("h" + us("home"), g.p[0], g.home)}${seg("x", g.p[1], "Empate")}${seg("a" + us("away"), g.p[2], g.away)}</div>`;
-  };
-  const longDate = d => fmtDate(d, { weekday: "long", day: "numeric", month: "long" });
-
-  const featured = nm.games.find(g => g.barca);
-  if (featured) {
-    const g = featured;
-    const f = document.createElement("article");
-    f.className = "feature";
-    f.innerHTML = `<p class="when">${longDate(g.date)}</p>
-      <div class="matchup">
-        <div class="side">${img(g.home_crest, g.home)}<span class="name">${g.home}</span><span class="xg">${nf1.format(g.xg[0])} golos esperados</span></div>
-        <div class="vs"><span class="sc">${g.score.replace("-", "–")}</span><small>resultado mais provável</small></div>
-        <div class="side">${img(g.away_crest, g.away)}<span class="name">${g.away}</span><span class="xg">${nf1.format(g.xg[1])} golos esperados</span></div>
-      </div>
-      ${splitBar(g)}
-      <div class="split-key"><span>Vitória do ${short(g.home)}</span><span>Empate</span><span>Vitória do ${short(g.away)}</span></div>`;
-    box.appendChild(f);
-  }
-
-  const others = nm.games.filter(g => !g.barca).sort((a, b) => a.date.localeCompare(b.date));
-  if (others.length) {
-    const h = document.createElement("h3");
-    h.className = "games-title";
-    h.textContent = "Os outros jogos da jornada";
-    box.appendChild(h);
-    const ul = document.createElement("ul");
-    ul.className = "games";
-    others.forEach(g => {
-      const li = document.createElement("li");
-      li.className = "game";
-      li.innerHTML = `<div class="teams">${img(g.home_crest, g.home)}${g.home}<br>${img(g.away_crest, g.away)}${g.away}<small>${longDate(g.date)}</small></div>
-        ${splitBar(g)}
-        <div class="score">resultado mais provável <b>${g.score.replace("-", "–")}</b></div>`;
-      ul.appendChild(li);
-    });
-    box.appendChild(ul);
-  }
-})();
-
-/* Confiança: backtest */
-(function confidence() {
+/* O modelo acerta? */
+(function model() {
   const bt = DATA.backtest, m = bt.metrics;
   const naive = m["ingénuo"].rps, us = m["modelo"].rps, odds = m["odds"].rps;
   const share = Math.round((naive - us) / (naive - odds) * 100);
-  $("confianca-text").innerHTML = `<p>Antes de ser usado nesta época, o modelo foi testado em ${bt.games.toLocaleString("pt-PT")} jogos das três épocas anteriores. Em cada semana só podia usar os jogos já disputados.</p><p>Um palpite ingénuo dá a todos os jogos as mesmas probabilidades médias de vitória em casa, empate e vitória fora. O modelo recupera ${share}% da distância entre esse palpite e as casas de apostas, que sabem coisas que o modelo não sabe, como lesões e onzes iniciais. Acerta o vencedor (ou o empate) em ${Math.round(m["modelo"].acerto * 100)}% dos jogos; as casas de apostas acertam em ${Math.round(m["odds"].acerto * 100)}%.</p>`;
-  $("rps-sub").textContent = "Ranked Probability Score nas três épocas de teste. Quanto mais baixo, melhor.";
+  $("modelo-text").innerHTML = `<p>Antes de ser usado nesta época, o modelo foi testado em ${bt.games.toLocaleString("pt-PT")} jogos das três épocas anteriores. Em cada semana só podia usar os jogos já disputados.</p><p>Um palpite ingénuo dá a todos os jogos as mesmas probabilidades médias. O modelo recupera ${share}% da distância entre esse palpite e as casas de apostas, que sabem coisas que o modelo não sabe, como lesões e onzes iniciais. Acerta o resultado (vitória, empate ou derrota) em ${Math.round(m["modelo"].acerto * 100)}% dos jogos; as casas de apostas, em ${Math.round(m["odds"].acerto * 100)}%.</p>`;
   const rows = [["Palpite ingénuo", naive, ""], ["Este modelo", us, "us"], ["Casas de apostas", odds, ""]];
   const lo = 0.17, hi = Math.max(naive, us, odds) + 0.005;
   rows.forEach(([lab, v, cls]) => {
@@ -650,41 +727,47 @@ $("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão e
     d.innerHTML = `<span>${lab}</span><span class="track"><span class="fill" style="width:${((v - lo) / (hi - lo) * 100).toFixed(1)}%"></span></span><span class="v">${nf3.format(v)}</span>`;
     $("rps-bars").appendChild(d);
   });
-  const note = document.createElement("p");
-  note.className = "sub";
-  note.style.margin = ".9rem 0 0";
-  note.textContent = `O eixo começa em ${nf2.format(lo)} para se verem as diferenças.`;
-  $("rps-bars").after(note);
+  $("rps-note").textContent = `O eixo começa em ${nf2.format(lo)} para se verem as diferenças.`;
 
-  const box = $("chart-calib");
   const cal = bt.calibration;
-  responsive(box, W => {
-  const H = Math.round(Math.min(320, W * 0.72)), mg = { t: 10, r: 12, b: 36, l: 40 };
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": cal.map(c => `previsto ${pct(c.previsto)}, real ${pct(c.real)}`).join("; ") }, box);
-  const x = v => mg.l + (W - mg.l - mg.r) * v;
-  const y = v => mg.t + (H - mg.t - mg.b) * (1 - v);
-  [0, .25, .5, .75, 1].forEach(v => {
-    el("line", { x1: mg.l, x2: W - mg.r, y1: y(v), y2: y(v), class: "ax", "stroke-width": v === 0 ? 1 : .5 }, svg);
-    el("text", { x: mg.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = Math.round(v * 100) + "%";
-    el("text", { x: x(v), y: H - mg.b + 16, "text-anchor": "middle" }, svg).textContent = Math.round(v * 100) + "%";
-  });
-  el("text", { x: (mg.l + W - mg.r) / 2, y: H - 4, "text-anchor": "middle" }, svg).textContent = "probabilidade prevista";
-  el("line", { x1: x(0), y1: y(0), x2: x(1), y2: y(1), stroke: "var(--other-2)", "stroke-width": 1.5, "stroke-dasharray": "4 4" }, svg);
-  el("path", { d: cal.map((c, i) => `${i ? "L" : "M"}${x(c.previsto)},${y(c.real)}`).join(""), fill: "none", stroke: "var(--s1)", "stroke-width": 2 }, svg);
-  cal.forEach(c => {
-    const dot = el("circle", { cx: x(c.previsto), cy: y(c.real), r: 5, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
-    bindTip(dot, `Previsto <b>${pct(c.previsto)}</b><br>Aconteceu <b>${pct(c.real)}</b><br>${c.n.toLocaleString("pt-PT")} previsões`);
-  });
+  responsive($("chart-calib"), W => {
+    const H = Math.round(Math.min(300, W * .78)), mg = { t: 10, r: 12, b: 36, l: 40 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": cal.map(c => `previsto ${pct(c.previsto)}, real ${pct(c.real)}`).join("; ") }, $("chart-calib"));
+    const x = v => mg.l + (W - mg.l - mg.r) * v;
+    const y = v => mg.t + (H - mg.t - mg.b) * (1 - v);
+    [0, .25, .5, .75, 1].forEach(v => {
+      el("line", { x1: mg.l, x2: W - mg.r, y1: y(v), y2: y(v), class: "ax", "stroke-width": v === 0 ? 1 : .5 }, svg);
+      el("text", { x: mg.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = Math.round(v * 100) + "%";
+      el("text", { x: x(v), y: H - mg.b + 16, "text-anchor": "middle" }, svg).textContent = Math.round(v * 100) + "%";
+    });
+    el("text", { x: (mg.l + W - mg.r) / 2, y: H - 4, "text-anchor": "middle" }, svg).textContent = "probabilidade prevista";
+    el("line", { x1: x(0), y1: y(0), x2: x(1), y2: y(1), stroke: "var(--other-2)", "stroke-width": 1.5, "stroke-dasharray": "4 4" }, svg);
+    el("path", { d: cal.map((c, i) => `${i ? "L" : "M"}${x(c.previsto)},${y(c.real)}`).join(""), fill: "none", stroke: "var(--s1)", "stroke-width": 2 }, svg);
+    cal.forEach(c => {
+      const dot = el("circle", { cx: x(c.previsto), cy: y(c.real), r: 5, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+      bindTip(dot, `Previsto <b>${pct(c.previsto)}</b><br>Aconteceu <b>${pct(c.real)}</b><br>${c.n.toLocaleString("pt-PT")} previsões`);
+    });
   });
   const fav = cal.filter(c => c.previsto > .6);
   if (fav.length) {
     const f = fav[fav.length - 1];
-    const p = document.createElement("p");
-    p.className = "sub";
-    p.style.margin = ".5rem 0 0";
-    p.textContent = `Do lado direito, os pontos ficam acima da diagonal: quando o modelo dá ${pct(f.previsto)} a um favorito, este ganha ${pct(f.real)} das vezes. Ou seja, o modelo subestima os favoritos, e o Barcelona é um deles.`;
-    box.after(p);
+    $("calib-note").textContent = `Do lado direito, os pontos ficam acima da diagonal: quando o modelo dá ${pct(f.previsto)} a um favorito, este ganha ${pct(f.real)} das vezes. O modelo subestima os favoritos, e o Barcelona é um deles.`;
   }
+})();
+
+/* Navegação: marca a secção visível */
+(function activeNav() {
+  const links = [...document.querySelectorAll(".topbar nav a")];
+  const targets = [$("topo"), ...links.map(a => document.querySelector(a.getAttribute("href")))];
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      links.forEach(a => a.removeAttribute("aria-current"));
+      const a = links[targets.indexOf(e.target) - 1];
+      if (a) a.setAttribute("aria-current", "true");
+    });
+  }, { rootMargin: "-45% 0px -50% 0px" });
+  targets.forEach(t => t && io.observe(t));
 })();
 </script>
 </body>
