@@ -93,6 +93,7 @@ def latest_matchday(played: pd.DataFrame) -> dict | None:
         "barca": TEAM in (g["home"], g["away"]),
         "p": [round(g["p_home"], 4), round(g["p_draw"], 4), round(g["p_away"], 4)],
         "xg": [round(g["xg_home"], 2), round(g["xg_away"], 2)], "score": g["likely_score"],
+        "p_score": round(g["p_likely_score"], 4),
     } for _, g in df.iterrows()]
     return {"created_at": df["created_at"].iloc[0], "games": games}
 

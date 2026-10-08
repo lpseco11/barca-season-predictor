@@ -28,6 +28,13 @@ from scipy.stats import poisson
 # (um jogo de há 1 ano pesa ~50%). Afinamos isto depois no backtest.
 DEFAULT_XI = 0.0019
 
+# Ao fazer uma média das forças ao longo do tempo, o modelo comprime as diferenças
+# entre equipas: no backtest, os favoritos ganhavam mais do que o previsto e os golos
+# das equipas fortes ficavam abaixo do real. Esticar ataque e defesa por um fator
+# comum corrige isso; 1,2 foi o melhor valor no backtest de 2023/24 a 2025/26
+# (RPS 0,1942 → 0,1937 e favoritos calibrados).
+DEFAULT_STRETCH = 1.2
+
 
 @dataclass
 class DixonColes:
@@ -156,10 +163,13 @@ def _neg_log_likelihood(params, home_idx, away_idx, x, y, w, n_teams):
 
 
 def fit(matches: pd.DataFrame, as_of: pd.Timestamp | None = None, xi: float = DEFAULT_XI,
-        with_cov: bool = False) -> DixonColes:
+        with_cov: bool = False, season_decay: float = 1.0, stretch: float = DEFAULT_STRETCH) -> DixonColes:
     """Ajusta o modelo usando só jogos anteriores a `as_of` (por defeito, todos).
 
     `with_cov=True` calcula também a incerteza dos parâmetros (para a simulação).
+    `season_decay` < 1 dá ainda menos peso às épocas anteriores (o plantel muda
+    no verão): um jogo de há k épocas pesa season_decay**k, além do decaimento diário.
+    `stretch` multiplica as forças de ataque e defesa depois do ajuste (ver DEFAULT_STRETCH).
     """
     if as_of is None:
         as_of = matches["date"].max() + pd.Timedelta(days=1)
@@ -173,6 +183,10 @@ def fit(matches: pd.DataFrame, as_of: pd.Timestamp | None = None, xi: float = DE
     x = df["home_goals"].to_numpy(dtype=float)
     y = df["away_goals"].to_numpy(dtype=float)
     w = time_weights(df["date"], as_of, xi)
+    if season_decay != 1.0:
+        seasons = sorted(df["season"].unique())
+        back = (len(seasons) - 1) - df["season"].map({sn: i for i, sn in enumerate(seasons)}).to_numpy()
+        w = w * season_decay ** back
 
     x0 = np.zeros(3 + 2 * n)
     x0[0] = np.log(max((x * w).sum() / w.sum(), 0.1))
@@ -185,6 +199,12 @@ def fit(matches: pd.DataFrame, as_of: pd.Timestamp | None = None, xi: float = DE
     p = res.x
     args = (home_idx, away_idx, x, y, w, n)
     cov = np.linalg.inv(_hessian(p, args)) if with_cov else None
+    if stretch != 1.0:
+        scale = np.ones_like(p)
+        scale[3:] = stretch
+        p = p * scale
+        if cov is not None:
+            cov = cov * np.outer(scale, scale)
     return DixonColes(teams=teams, intercept=p[0], home_adv=p[1], rho=p[2],
                       attack=p[3:3 + n], defence=p[3 + n:], cov=cov)
 

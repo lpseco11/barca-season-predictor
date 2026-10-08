@@ -8,7 +8,7 @@ Site: https://lpseco11.github.io/barca-season-predictor/
 
 ## O que o projeto faz
 
-Depois de cada jornada, um modelo Dixon-Coles volta a estimar a força de ataque e de defesa das 20 equipas, e o resto da época é simulado 10 000 vezes. Daí saem as hipóteses de título, de Champions(top 4 na liga), e de descida de cada equipa, e os pontos com que deve acabar.
+Depois de cada jornada, um modelo Dixon-Coles volta a estimar a força de ataque e de defesa das 20 equipas, e o resto da época é simulado 10 000 vezes. Daí saem as hipóteses de título, de Champions (top 4 na liga) e de descida de cada equipa, e os pontos com que deve acabar.
 
 Antes de cada jornada, o projeto regista a previsão de cada jogo: probabilidades de vitória, empate e derrota e o resultado mais provável. O ficheiro fica no repositório com a data do commit, por isso dá para confirmar que a previsão foi feita antes do jogo.
 
@@ -16,23 +16,23 @@ O site também compara os golos do Barcelona com o xG de cada jogo, para percebe
 
 ## Resultados do backtest
 
-Antes de ser usado nesta época, o modelo preveu as épocas 2023/24, 2024/25 e 2025/26 de La Liga (1140 jogos), semana a semana, só com os jogos já disputados em cada momento.
+Antes de ser usado nesta época, o modelo previu as épocas 2023/24, 2024/25 e 2025/26 de La Liga (1140 jogos), semana a semana, só com os jogos já disputados em cada momento.
 
 | | RPS | Log loss | Acerto 1X2 |
 |---|---|---|---|
 | Palpite ingénuo (frequências médias) | 0,225 | 1,064 | 45,8% |
-| Este modelo | 0,194 | 0,970 | 52,9% |
+| Este modelo | 0,194 | 0,969 | 53,0% |
 | Casas de apostas (odds médias) | 0,189 | 0,956 | 55,0% |
 
-O RPS (Ranked Probability Score) é a métrica habitual para avaliar previsões de futebol; quanto mais baixo, melhor. O modelo recupera cerca de 86% da distância entre o palpite ingénuo e as casas de apostas, com resultados parecidos nas três épocas.
+O RPS (Ranked Probability Score) é a métrica habitual para avaliar previsões de futebol; quanto mais baixo, melhor. O modelo recupera cerca de 88% da distância entre o palpite ingénuo e as casas de apostas, com resultados parecidos nas três épocas.
 
-O modelo é conservador com os favoritos. Quando dá 75% a uma equipa, ela ganha cerca de 82% das vezes. Nos jogos do Barcelona previa vitória em 63% dos casos, e o Barcelona ganhou 75%.
+A primeira versão do modelo era conservadora com os favoritos: quando dava 75% a uma equipa, ela ganhava cerca de 82% das vezes, e as equipas fortes marcavam mais golos do que o previsto. Ao fazer uma média das forças ao longo do tempo, o modelo puxava todas as equipas para o meio da tabela. A correção foi multiplicar as forças de ataque e defesa por um fator comum, 1,2, escolhido no backtest. Com ele, quando o modelo dá 75% a uma equipa, ela ganha 76% das vezes, e os golos previstos para o Barcelona nas três épocas de teste coincidem com os reais (2,42 por jogo).
 
 ## Como funciona
 
-1. Dados: resultados, remates, xG e odds de La Liga e da Segunda Divisão desde 2021/22, de [football-data.co.uk](https://www.football-data.co.uk/). A Segunda divisão serve para as equipas promovidas terem histórico.
-2. Modelo: Dixon-Coles com decaimento temporal. Cada jogo pesa `exp(-ξ · dias)`, com ξ = 0,0019, o melhor valor no backtest; um jogo com um ano conta metade. Os parâmetros são estimados por máxima verosimilhança, com gradiente analítico.
-3. Simulação: Monte Carlo das jornadas em falta. Em cada simulação, as forças das equipas são sorteadas a partir da incerteza da estimativa (aproximação de Laplace). Depois da 7.ª jornada, isso baixou a probabilidade de título do Barcelona de 88% para 83%.
+1. Dados: resultados, remates, xG e odds de La Liga e da Segunda Divisão desde 2021/22, de [football-data.co.uk](https://www.football-data.co.uk/). A Segunda divisão serve para as equipas promovidas terem histórico. Quando o football-data.co.uk ainda não publicou os próximos jogos, o calendário vem de [fixturedownload.com](https://fixturedownload.com/).
+2. Modelo: Dixon-Coles com decaimento temporal. Cada jogo pesa `exp(-ξ · dias)`, com ξ = 0,0019, o melhor valor no backtest; um jogo com um ano conta metade. Os parâmetros são estimados por máxima verosimilhança, com gradiente analítico, e as forças são depois multiplicadas por 1,2.
+3. Simulação: Monte Carlo das jornadas em falta. Em cada simulação, as forças das equipas são sorteadas a partir da incerteza da estimativa (aproximação de Laplace). Assim, as probabilidades da época ficam menos extremas do que com forças fixas.
 4. Atualização: um workflow do GitHub Actions corre todas as manhãs. Regista previsões para jogos novos, volta a simular a época quando há resultados novos e gera o site estático em `docs/`, publicado pelo GitHub Pages. Só faz commit quando alguma coisa mudou.
 
 ## Limitações
@@ -72,4 +72,4 @@ python3 -m venv .venv
 
 ## Créditos
 
-Dados de [football-data.co.uk](https://www.football-data.co.uk/). Fotografia do Camp Nou de Luis Miguel Bugallo Sánchez, CC BY-SA 3.0. Os emblemas são marcas dos respetivos clubes e aparecem só para identificar as equipas; a origem de cada imagem está em [docs/img/CREDITS.md](docs/img/CREDITS.md).
+Dados de [football-data.co.uk](https://www.football-data.co.uk/) e [fixturedownload.com](https://fixturedownload.com/). Fotografia do Camp Nou de Luis Miguel Bugallo Sánchez, CC BY-SA 3.0. Os emblemas são marcas dos respetivos clubes e aparecem só para identificar as equipas; a origem de cada imagem está em [docs/img/CREDITS.md](docs/img/CREDITS.md).

@@ -45,7 +45,7 @@ def test_gradient_matches_numerical():
 
 def test_recovers_known_strengths():
     df, attack, defence = _synthetic_league()
-    model = fit(df, xi=0.0)
+    model = fit(df, xi=0.0, stretch=1.0)
     order = [model.teams.index(t) for t in ["A", "B", "C", "D", "E", "F"]]
     assert np.allclose(model.attack[order], attack - attack.mean(), atol=0.12)
     assert np.allclose(model.defence[order], defence - defence.mean(), atol=0.12)
@@ -59,3 +59,12 @@ def test_probabilities_are_valid():
     assert abs(sum(probs.values()) - 1) < 1e-9
     assert probs["home"] > probs["away"]
     assert abs(model.score_matrix("C", "D").sum() - 1) < 1e-9
+
+
+def test_stretch_scales_strengths_only():
+    df, _, _ = _synthetic_league(rounds=10)
+    base = fit(df, stretch=1.0)
+    wide = fit(df, stretch=1.2)
+    assert np.allclose(wide.attack, base.attack * 1.2)
+    assert np.allclose(wide.defence, base.defence * 1.2)
+    assert wide.home_adv == base.home_adv and wide.intercept == base.intercept

@@ -39,14 +39,15 @@ def rps(probs: np.ndarray, y: np.ndarray) -> float:
     return float((diff ** 2).sum(axis=1).mean() / 2)
 
 
-def backtest(matches: pd.DataFrame, test_seasons: list[str], xi: float = DEFAULT_XI) -> pd.DataFrame:
+def backtest(matches: pd.DataFrame, test_seasons: list[str], xi: float = DEFAULT_XI,
+             season_decay: float = 1.0) -> pd.DataFrame:
     """Previsões semana a semana para os jogos de La Liga das épocas de teste."""
     test = matches[(matches["division"] == "SP1") & matches["season"].isin(test_seasons)].copy()
     test["week"] = test["date"].dt.to_period("W-SUN").dt.start_time
 
     rows = []
     for week, games in test.groupby("week"):
-        model = fit(matches, as_of=week, xi=xi)
+        model = fit(matches, as_of=week, xi=xi, season_decay=season_decay)
         for _, g in games.iterrows():
             if g["home"] not in model.teams or g["away"] not in model.teams:
                 continue  # equipa sem histórico (não acontece com SP1+SP2)

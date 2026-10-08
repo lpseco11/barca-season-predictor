@@ -521,7 +521,7 @@ $("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão e
   box.innerHTML = `<h2 id="next-title">Próximo jogo, ${fmtDate(g.date, { weekday: "long", day: "numeric", month: "long" })}</h2>
     <div class="matchup">
       <div class="side">${img(g.home_crest, g.home, 84, 'fetchpriority="high" loading="eager"')}<span class="name">${g.home}</span><span class="xg">${nf1.format(g.xg[0])} golos esperados</span></div>
-      <div class="vs"><span class="sc">${g.score.replace("-", "–")}</span><small>resultado<br>mais provável</small></div>
+      <div class="vs"><span class="sc">${g.score.replace("-", "–")}</span><small>resultado mais<br>provável (${pct(g.p_score)})</small></div>
       <div class="side">${img(g.away_crest, g.away, 84, 'fetchpriority="high" loading="eager"')}<span class="name">${g.away}</span><span class="xg">${nf1.format(g.xg[1])} golos esperados</span></div>
     </div>
     ${splitBar(g)}
@@ -585,7 +585,7 @@ $("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão e
         <span class="when">${fmtDate(g.date, { weekday: "short", day: "numeric", month: "short" })}</span>
       </div>
       ${splitBar(g)}
-      <div class="score">${g.score.replace("-", "–")}<small>mais provável</small></div>`;
+      <div class="score">${g.score.replace("-", "–")}<small>${pct(g.p_score)} de hipóteses</small></div>`;
     ul.appendChild(li);
   });
   $("games").appendChild(ul);
@@ -751,7 +751,12 @@ $("headline").textContent = `Em 100 épocas simuladas, o Barcelona é campeão e
   const fav = cal.filter(c => c.previsto > .6);
   if (fav.length) {
     const f = fav[fav.length - 1];
-    $("calib-note").textContent = `Do lado direito, os pontos ficam acima da diagonal: quando o modelo dá ${pct(f.previsto)} a um favorito, este ganha ${pct(f.real)} das vezes. O modelo subestima os favoritos, e o Barcelona é um deles.`;
+    const gap = f.real - f.previsto;
+    $("calib-note").textContent = Math.abs(gap) <= 0.04
+      ? `Os pontos ficam perto da diagonal: quando o modelo dá ${pct(f.previsto)} a um favorito, este ganha ${pct(f.real)} das vezes.`
+      : gap > 0
+        ? `Do lado direito, os pontos ficam acima da diagonal: quando o modelo dá ${pct(f.previsto)} a um favorito, este ganha ${pct(f.real)} das vezes. O modelo subestima os favoritos.`
+        : `Do lado direito, os pontos ficam abaixo da diagonal: quando o modelo dá ${pct(f.previsto)} a um favorito, este só ganha ${pct(f.real)} das vezes. O modelo sobrestima os favoritos.`;
   }
 })();
 
