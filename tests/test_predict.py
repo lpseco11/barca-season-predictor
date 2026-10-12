@@ -6,7 +6,8 @@ import pandas as pd
 import pytest
 
 from barca.model import DixonColes
-from barca.predict import FIXTUREDOWNLOAD_NAMES, evaluate_logged, new_fixtures, predict_fixtures
+from barca.data import FIXTUREDOWNLOAD_NAMES
+from barca.predict import evaluate_logged, merge_fixtures, new_fixtures, predict_fixtures
 
 MODEL = DixonColes(teams=["Barcelona", "Getafe"], attack=np.array([0.8, -0.8]),
                    defence=np.array([-0.5, 0.5]), intercept=0.0, home_adv=0.25, rho=-0.05)
@@ -58,3 +59,14 @@ def test_fixturedownload_names_cover_all_teams():
     # Os 20 clubes da época têm emblema em site/crests.json, com os nomes de football-data.co.uk.
     crests = json.loads((Path(__file__).resolve().parents[1] / "site" / "crests.json").read_text(encoding="utf-8"))
     assert set(FIXTUREDOWNLOAD_NAMES.values()) == set(crests)
+
+
+def test_merge_fixtures_prefers_primary_and_fills_gaps():
+    primary = pd.DataFrame({"date": pd.to_datetime(["2026-10-12"]), "home": ["Levante"], "away": ["Sevilla"],
+                            "odds_home": [2.68], "odds_draw": [3.27], "odds_away": [2.56]})
+    extra = pd.DataFrame({"date": pd.to_datetime(["2026-10-12", "2026-10-17"]),
+                          "home": ["Levante", "Betis"], "away": ["Sevilla", "Barcelona"]})
+    out = merge_fixtures(primary, extra)
+    assert len(out) == 2
+    assert out.loc[out["home"] == "Levante", "odds_home"].iloc[0] == 2.68
+    assert "Betis" in set(out["home"])

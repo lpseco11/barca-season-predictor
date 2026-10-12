@@ -13,8 +13,8 @@ import numpy as np
 import pandas as pd
 
 from barca import CURRENT_SEASON, TEAM
-from barca.backtest import backtest, evaluate, outcome
-from barca.data import load_matches, team_matches
+from barca.backtest import backtest, evaluate, outcome, rps
+from barca.data import fetch_fixturedownload, load_matches, team_matches
 from barca.model import DEFAULT_XI, fit
 from barca.simulate import simulate, summary, table
 
@@ -77,25 +77,76 @@ def backtest_section() -> dict:
             "calibration": calib.reset_index(drop=True).round(4).to_dict("records")}
 
 
-def latest_matchday(played: pd.DataFrame) -> dict | None:
-    """Previsões registadas para jogos que ainda não se disputaram (ou None)."""
+def load_predictions() -> pd.DataFrame:
     files = sorted(PRED_DIR.glob("matchday_*.csv"))
     if not files:
-        return None
-    df = pd.read_csv(files[-1], parse_dates=["date"])
-    done = set(zip(played["date"], played["home"], played["away"]))
-    df = df[[(d, h, a) not in done for d, h, a in zip(df["date"], df["home"], df["away"])]]
-    if df.empty:
-        return None
-    games = [{
+        return pd.DataFrame()
+    return pd.concat([pd.read_csv(f, parse_dates=["date"]) for f in files], ignore_index=True)
+
+
+def game_card(g: pd.Series) -> dict:
+    return {
         "date": g["date"].strftime("%Y-%m-%d"), "home": name(g["home"]), "away": name(g["away"]),
         "home_crest": crest(g["home"]), "away_crest": crest(g["away"]),
         "barca": TEAM in (g["home"], g["away"]),
         "p": [round(g["p_home"], 4), round(g["p_draw"], 4), round(g["p_away"], 4)],
         "xg": [round(g["xg_home"], 2), round(g["xg_away"], 2)], "score": g["likely_score"],
         "p_score": round(g["p_likely_score"], 4),
-    } for _, g in df.iterrows()]
-    return {"created_at": df["created_at"].iloc[0], "games": games}
+    }
+
+
+def matchday_sections(played: pd.DataFrame, rounds: dict) -> tuple[dict | None, dict | None]:
+    """(próximos jogos já previstos, avaliação da última jornada com previsões e resultados).
+
+    Um jogo previsto conta como "próximo" se ainda não tem resultado e é posterior ao
+    último resultado conhecido; um jogo sem resultado com data anterior foi adiado.
+    """
+    preds = load_predictions()
+    if preds.empty:
+        return None, None
+    preds["round"] = [rounds.get((h, a)) for h, a in zip(preds["home"], preds["away"])]
+    results = played[["home", "away", "home_goals", "away_goals"]]
+    merged = preds.merge(results, on=["home", "away"], how="left")
+    last_result = played["date"].max()
+
+    upcoming = merged[merged["home_goals"].isna() & (merged["date"] > last_result)]
+    nxt = None
+    if not upcoming.empty:
+        rnd = upcoming["round"].mode()
+        nxt = {"round": int(rnd.iloc[0]) if len(rnd) else None, "created_at": upcoming["created_at"].min(),
+               "games": [game_card(g) for _, g in upcoming.sort_values("date").iterrows()]}
+
+    done = merged.dropna(subset=["home_goals"])
+    last = None
+    if not done.empty:
+        rnd = done["round"].dropna().max() if done["round"].notna().any() else None
+        games = done[done["round"] == rnd] if rnd is not None else done
+        y = outcome(games)
+        P = games[["p_home", "p_draw", "p_away"]].to_numpy()
+        rows = []
+        for (_, g), yi, pi in zip(games.sort_values("date").iterrows(), y, P):
+            card = game_card(g)
+            hg, ag = int(g["home_goals"]), int(g["away_goals"])
+            card.update(result=[hg, ag], pick=int(pi.argmax()), actual=int(yi), hit=bool(pi.argmax() == yi),
+                        exact=g["likely_score"] == f"{hg}-{ag}")
+            rows.append(card)
+        last = {"round": int(rnd) if rnd is not None else None, "games": rows,
+                "hits": int(sum(r["hit"] for r in rows)), "exact": int(sum(r["exact"] for r in rows)),
+                "rps": round(rps(P, y), 4)}
+    return nxt, last
+
+
+def barca_next(rounds_calendar: pd.DataFrame | None, played: pd.DataFrame) -> dict | None:
+    """Próximo jogo do Barcelona no calendário, mesmo que ainda não tenha previsão."""
+    if rounds_calendar is None:
+        return None
+    cal = rounds_calendar[rounds_calendar["home_goals"].isna() & (rounds_calendar["date"] > played["date"].max())]
+    cal = cal[(cal["home"] == TEAM) | (cal["away"] == TEAM)].sort_values("date")
+    if cal.empty:
+        return None
+    g = cal.iloc[0]
+    return {"date": g["date"].strftime("%Y-%m-%d"), "home": name(g["home"]), "away": name(g["away"]),
+            "home_crest": crest(g["home"]), "away_crest": crest(g["away"]), "round": int(g["round"])}
 
 
 def form(played: pd.DataFrame, team: str, n: int = 5) -> list[str]:
@@ -138,6 +189,14 @@ if __name__ == "__main__":
             "p_title": round(r["p_titulo"], 4), "p_top4": round(r["p_top4"], 4), "p_releg": round(r["p_descida"], 4),
         })
 
+    try:
+        calendar = fetch_fixturedownload()
+    except Exception as e:  # sem calendário, o site continua a funcionar sem estas partes
+        print(f"Aviso: sem calendário do fixturedownload.com ({e})")
+        calendar = None
+    rounds = {} if calendar is None else dict(zip(zip(calendar["home"], calendar["away"]), calendar["round"]))
+    next_md, last_md = matchday_sections(played, rounds)
+
     bm = team_matches(played, TEAM)
     history = pd.read_csv(PRED_DIR / "season_history.csv") if (PRED_DIR / "season_history.csv").exists() else pd.DataFrame()
 
@@ -156,11 +215,15 @@ if __name__ == "__main__":
             "matches": [{"date": m["date"].strftime("%Y-%m-%d"), "opponent": name(m["opponent"]),
                          "crest": crest(m["opponent"]), "venue": m["venue"],
                          "gf": int(m["goals_for"]), "ga": int(m["goals_against"]),
-                         "xgf": float(m["xg_for"]), "xga": float(m["xg_against"])} for _, m in bm.iterrows()],
+                         # Jogos vindos da reserva (fixturedownload.com) ainda não têm xG.
+                         "xgf": None if pd.isna(m["xg_for"]) else float(m["xg_for"]),
+                         "xga": None if pd.isna(m["xg_against"]) else float(m["xg_against"])} for _, m in bm.iterrows()],
         },
         "table": rows,
         "history": history.to_dict("records"),
-        "next_matchday": latest_matchday(played),
+        "next_matchday": next_md,
+        "last_matchday": last_md,
+        "barca_next": barca_next(calendar, played),
         "backtest": backtest_section(),
     }
 

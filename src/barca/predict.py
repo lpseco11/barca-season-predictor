@@ -1,72 +1,54 @@
 """Previsões jogo a jogo para a próxima jornada, e avaliação depois dos jogos."""
 
-import json
-import urllib.request
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 from barca.backtest import implied_probs, log_loss, outcome, rps
+from barca.data import fetch_fixturedownload
 from barca.model import DixonColes
 
 FIXTURES_URL = "https://www.football-data.co.uk/fixtures.csv"
-FIXTUREDOWNLOAD_URL = "https://fixturedownload.com/feed/json/la-liga-2026"
-
-# Nomes em fixturedownload.com → nomes em football-data.co.uk (os que o modelo usa).
-FIXTUREDOWNLOAD_NAMES = {
-    "Athletic Club": "Ath Bilbao", "Atlético de Madrid": "Ath Madrid", "CA Osasuna": "Osasuna",
-    "Celta": "Celta", "Deportivo Alavés": "Alaves", "Elche CF": "Elche", "FC Barcelona": "Barcelona",
-    "Getafe CF": "Getafe", "Levante UD": "Levante", "Málaga CF": "Malaga", "R. Racing Club": "Santander",
-    "RC Deportivo": "La Coruna", "RCD Espanyol de Barcelona": "Espanol", "Rayo Vallecano": "Vallecano",
-    "Real Betis": "Betis", "Real Madrid": "Real Madrid", "Real Sociedad": "Sociedad", "Sevilla FC": "Sevilla",
-    "Valencia CF": "Valencia", "Villarreal CF": "Villarreal",
-}
 
 
-def load_fixtures(division: str = "SP1", manual: Path | None = None, days_ahead: int = 7) -> pd.DataFrame:
-    """Próximos jogos de La Liga.
+def load_fixtures(division: str = "SP1", manual: Path | None = None, days_ahead: int = 3) -> pd.DataFrame:
+    """Jogos de La Liga dos próximos `days_ahead` dias (hoje incluído).
 
-    Ordem de preferência:
-    1. ficheiro manual, se existir (CSV com date dd/mm/aaaa, home, away e, opcionalmente, odds);
-    2. football-data.co.uk, que também traz as odds;
-    3. fixturedownload.com, que tem o calendário completo da época, para quando o
-       football-data.co.uk ainda não publicou os jogos dos próximos dias.
+    Se existir o ficheiro manual (CSV com date dd/mm/aaaa, home, away e, opcionalmente,
+    odds), usa só esse. Senão junta as duas fontes: football-data.co.uk, que traz as odds,
+    e fixturedownload.com para os jogos que o football-data.co.uk ainda não publicou.
+
+    A janela curta faz com que cada jogo seja previsto poucos dias antes, já com os
+    resultados da jornada anterior, mas com várias corridas diárias até ao pontapé de saída.
     """
+    today = pd.Timestamp.now().normalize()
     if manual is not None and manual.exists():
         df = pd.read_csv(manual)
         df["date"] = pd.to_datetime(df["date"], dayfirst=True)
     else:
-        df = pd.read_csv(FIXTURES_URL, encoding="utf-8-sig", encoding_errors="replace")
-        df = df[df["Div"] == division].rename(columns={
+        fd = pd.read_csv(FIXTURES_URL, encoding="utf-8-sig", encoding_errors="replace")
+        fd = fd[fd["Div"] == division].rename(columns={
             "Date": "date", "HomeTeam": "home", "AwayTeam": "away",
             "AvgH": "odds_home", "AvgD": "odds_draw", "AvgA": "odds_away"})
-        df["date"] = pd.to_datetime(df["date"], dayfirst=True)
-        today = pd.Timestamp.now().normalize()
-        soon = (df["date"] >= today) & (df["date"] <= today + pd.Timedelta(days=days_ahead))
-        if not soon.any():
-            df = load_fixturedownload(days_ahead)
+        fd["date"] = pd.to_datetime(fd["date"], dayfirst=True)
+        df = merge_fixtures(fd, load_fixturedownload())
+    df = df[(df["date"] >= today) & (df["date"] <= today + pd.Timedelta(days=days_ahead))]
     cols = [c for c in ["date", "home", "away", "odds_home", "odds_draw", "odds_away"] if c in df.columns]
-    return df[cols].reset_index(drop=True)
+    return df[cols].sort_values("date").reset_index(drop=True)
 
 
-def load_fixturedownload(days_ahead: int = 7) -> pd.DataFrame:
-    """Jogos ainda sem resultado nos próximos dias, do calendário de fixturedownload.com.
+def merge_fixtures(primary: pd.DataFrame, extra: pd.DataFrame) -> pd.DataFrame:
+    """Jogos de `primary` mais os de `extra` que lá não estão (o par casa/fora identifica o jogo)."""
+    have = set(zip(primary["home"], primary["away"]))
+    extra = extra[[(h, a) not in have for h, a in zip(extra["home"], extra["away"])]]
+    return pd.concat([primary, extra], ignore_index=True)
 
-    As horas vêm em UTC; a data do jogo é a de Madrid, como em football-data.co.uk.
-    """
-    req = urllib.request.Request(FIXTUREDOWNLOAD_URL, headers={"User-Agent": "barca-season-predictor"})
-    games = pd.DataFrame(json.load(urllib.request.urlopen(req, timeout=30)))
-    games = games[games["HomeTeamScore"].isna()]
-    games["date"] = (pd.to_datetime(games["DateUtc"], utc=True).dt.tz_convert("Europe/Madrid")
-                     .dt.tz_localize(None).dt.normalize())
-    today = pd.Timestamp.now().normalize()
-    games = games[(games["date"] >= today) & (games["date"] <= today + pd.Timedelta(days=days_ahead))]
-    unknown = (set(games["HomeTeam"]) | set(games["AwayTeam"])) - set(FIXTUREDOWNLOAD_NAMES)
-    if unknown:
-        raise ValueError(f"Nomes de equipas sem correspondência em FIXTUREDOWNLOAD_NAMES: {sorted(unknown)}")
-    return pd.DataFrame({"date": games["date"], "home": games["HomeTeam"].map(FIXTUREDOWNLOAD_NAMES),
-                         "away": games["AwayTeam"].map(FIXTUREDOWNLOAD_NAMES)}).reset_index(drop=True)
+
+def load_fixturedownload() -> pd.DataFrame:
+    """Jogos ainda sem resultado no calendário de fixturedownload.com."""
+    games = fetch_fixturedownload()
+    return games[games["home_goals"].isna()][["date", "home", "away"]].reset_index(drop=True)
 
 
 def new_fixtures(fixtures: pd.DataFrame, done: pd.DataFrame, today: pd.Timestamp) -> pd.DataFrame:
@@ -99,7 +81,12 @@ def predict_fixtures(model: DixonColes, fixtures: pd.DataFrame) -> pd.DataFrame:
 
 def evaluate_logged(predictions: pd.DataFrame, results: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     """Junta previsões registadas com os resultados reais e calcula as métricas."""
-    merged = predictions.merge(results[["date", "home", "away", "home_goals", "away_goals"]],
+    # As odds vêm do ficheiro de resultados quando existem lá (a previsão pode ter sido
+    # registada a partir de fixturedownload.com, que não tem odds).
+    odds = [c for c in ["odds_home", "odds_draw", "odds_away"] if c in results.columns]
+    if odds:
+        predictions = predictions.drop(columns=[c for c in odds if c in predictions.columns])
+    merged = predictions.merge(results[["date", "home", "away", "home_goals", "away_goals", *odds]],
                                on=["date", "home", "away"], how="inner")
     if merged.empty:
         return merged, {}

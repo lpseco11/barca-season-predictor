@@ -63,10 +63,13 @@ if __name__ == "__main__":
     }])
     HISTORY.parent.mkdir(exist_ok=True)
     history = pd.read_csv(HISTORY) if HISTORY.exists() else pd.DataFrame()
-    # Uma linha por estado dos dados: sem jogos novos, o histórico fica como está
-    # (assim a corrida diária não gera alterações nem commits desnecessários).
+    # Um ponto por jornada: enquanto os jogos da mesma jornada vão terminando, o ponto
+    # dessa jornada é atualizado; sem jogos novos, o histórico fica como está.
+    matchday = round(len(played) / 10)
     if not history.empty and (history["games_played"] == len(played)).any():
         print(f"\nHistórico sem alterações: ainda não há jogos novos desde {entry['data_until'].iloc[0]}.")
     else:
+        if not history.empty:
+            history = history[(history["games_played"] / 10).round() != matchday]
         pd.concat([history, entry], ignore_index=True).to_csv(HISTORY, index=False)
-        print(f"\nHistórico atualizado: {HISTORY.relative_to(ROOT)}")
+        print(f"\nHistórico atualizado ({matchday}.ª jornada): {HISTORY.relative_to(ROOT)}")

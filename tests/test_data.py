@@ -1,6 +1,6 @@
 import pandas as pd
 
-from barca.data import team_matches
+from barca.data import add_missing_results, team_matches
 
 
 def test_team_matches_perspective():
@@ -20,3 +20,25 @@ def test_team_matches_perspective():
     assert list(out["goals_for"]) == [5, 2, 1]
     assert list(out["xg_for"]) == [4.4, 3.9, 1.2]
     assert list(out["result"]) == ["V", "V", "E"]
+
+
+def test_add_missing_results_only_fills_gaps():
+    ours = pd.DataFrame({
+        "date": pd.to_datetime(["2026-09-20"]), "home": ["Sevilla"], "away": ["Barcelona"],
+        "home_goals": [1], "away_goals": [3], "home_xg": [0.45], "away_xg": [3.26],
+        "season": ["2627"], "division": ["SP1"], "source": ["football-data"],
+    })
+    fallback = pd.DataFrame({
+        "date": pd.to_datetime(["2026-09-20", "2026-10-10", "2026-10-10", "2026-10-17"]),
+        "home": ["Sevilla", "Barcelona", "Vallecano", "Betis"],
+        "away": ["Barcelona", "Getafe", "Ath Bilbao", "Barcelona"],
+        "home_goals": [9, 3, None, None],   # o 9 não pode substituir o resultado que já temos
+        "away_goals": [9, 0, None, None],   # jogo adiado e jogo futuro ficam de fora
+    })
+    out = add_missing_results(ours, fallback)
+    assert len(out) == 2
+    sev = out[out["home"] == "Sevilla"].iloc[0]
+    assert (sev["home_goals"], sev["source"]) == (1, "football-data")
+    new = out[out["home"] == "Barcelona"].iloc[0]
+    assert (new["home_goals"], new["away_goals"], new["source"]) == (3, 0, "fixturedownload")
+    assert pd.isna(new["home_xg"])
