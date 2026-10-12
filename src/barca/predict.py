@@ -52,15 +52,18 @@ def load_fixturedownload() -> pd.DataFrame:
 
 
 def new_fixtures(fixtures: pd.DataFrame, done: pd.DataFrame, today: pd.Timestamp) -> pd.DataFrame:
-    """Jogos ainda por disputar (a partir de `today`) que não têm previsão registada."""
-    key = ["date", "home", "away"]
+    """Jogos ainda por disputar (a partir de `today`) que não têm previsão registada.
+
+    O jogo é identificado pelo par casa/fora (cada par joga uma vez por época), e não
+    pela data: um jogo adiado mantém a previsão feita para a data original.
+    """
     upcoming = fixtures[fixtures["date"] >= today].copy()
     upcoming["date"] = upcoming["date"].astype("datetime64[ns]")
     if done.empty:
         return upcoming.reset_index(drop=True)
-    done = done[key].astype({"date": "datetime64[ns]"})
-    merged = upcoming.merge(done, on=key, how="left", indicator=True)
-    return merged[merged["_merge"] == "left_only"].drop(columns="_merge").reset_index(drop=True)
+    have = set(zip(done["home"], done["away"]))
+    keep = [(h, a) not in have for h, a in zip(upcoming["home"], upcoming["away"])]
+    return upcoming[keep].reset_index(drop=True)
 
 
 def predict_fixtures(model: DixonColes, fixtures: pd.DataFrame) -> pd.DataFrame:
@@ -86,8 +89,9 @@ def evaluate_logged(predictions: pd.DataFrame, results: pd.DataFrame) -> tuple[p
     odds = [c for c in ["odds_home", "odds_draw", "odds_away"] if c in results.columns]
     if odds:
         predictions = predictions.drop(columns=[c for c in odds if c in predictions.columns])
-    merged = predictions.merge(results[["date", "home", "away", "home_goals", "away_goals", *odds]],
-                               on=["date", "home", "away"], how="inner")
+    # O par casa/fora identifica o jogo; a data pode mudar se o jogo for adiado.
+    merged = predictions.merge(results[["home", "away", "home_goals", "away_goals", *odds]],
+                               on=["home", "away"], how="inner")
     if merged.empty:
         return merged, {}
     y = outcome(merged)

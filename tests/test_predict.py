@@ -70,3 +70,9 @@ def test_merge_fixtures_prefers_primary_and_fills_gaps():
     assert len(out) == 2
     assert out.loc[out["home"] == "Levante", "odds_home"].iloc[0] == 2.68
     assert "Betis" in set(out["home"])
+
+
+def test_postponed_game_is_not_predicted_twice():
+    done = pd.DataFrame({"date": pd.to_datetime(["2026-10-10"]), "home": ["Vallecano"], "away": ["Ath Bilbao"]})
+    rescheduled = pd.DataFrame({"date": pd.to_datetime(["2026-11-04"]), "home": ["Vallecano"], "away": ["Ath Bilbao"]})
+    assert new_fixtures(rescheduled, done, today=pd.Timestamp("2026-11-01")).empty
