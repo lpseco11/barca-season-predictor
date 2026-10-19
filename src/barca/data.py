@@ -10,6 +10,7 @@ Quando o football-data.co.uk os publica, os dados dele substituem os da reserva.
 
 import json
 import sys
+import time
 import urllib.request
 from pathlib import Path
 
@@ -61,10 +62,23 @@ def download(season: str, division: str = "SP1", force: bool = False) -> Path:
     path = RAW_DIR / f"{division}_{season}.csv"
     if path.exists() and not force and season != CURRENT_SEASON:
         return path
-    response = requests.get(BASE_URL.format(season=season, division=division), timeout=30)
-    response.raise_for_status()
-    path.write_bytes(response.content)
-    return path
+    url = BASE_URL.format(season=season, division=division)
+    # O site às vezes demora a responder: tenta 3 vezes, com pausas crescentes.
+    for attempt in range(3):
+        try:
+            response = requests.get(url, timeout=60)
+            response.raise_for_status()
+            path.write_bytes(response.content)
+            return path
+        except requests.RequestException as e:
+            error = e
+            time.sleep(10 * (attempt + 1))
+    # Se continuar em baixo, usa a última cópia descarregada (a do dia anterior, no
+    # GitHub Actions, graças à cache). Os dados ficam um dia atrasados em vez de falhar.
+    if path.exists():
+        print(f"Aviso: {url} não respondeu ({error}); a usar a cópia guardada.", file=sys.stderr)
+        return path
+    raise error
 
 
 def load_season(season: str, division: str = "SP1") -> pd.DataFrame:
@@ -93,7 +107,14 @@ def fetch_fixturedownload() -> pd.DataFrame:
     Jogos por disputar (ou adiados) têm os golos a NaN.
     """
     req = urllib.request.Request(FIXTUREDOWNLOAD_URL, headers={"User-Agent": "barca-season-predictor"})
-    games = pd.DataFrame(json.load(urllib.request.urlopen(req, timeout=30)))
+    for attempt in range(3):
+        try:
+            games = pd.DataFrame(json.load(urllib.request.urlopen(req, timeout=60)))
+            break
+        except OSError:
+            if attempt == 2:
+                raise
+            time.sleep(10 * (attempt + 1))
     unknown = (set(games["HomeTeam"]) | set(games["AwayTeam"])) - set(FIXTUREDOWNLOAD_NAMES)
     if unknown:
         raise ValueError(f"Nomes de equipas sem correspondência em FIXTUREDOWNLOAD_NAMES: {sorted(unknown)}")

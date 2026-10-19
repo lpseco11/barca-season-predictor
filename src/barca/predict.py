@@ -1,5 +1,6 @@
 """Previsões jogo a jogo para a próxima jornada, e avaliação depois dos jogos."""
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -27,12 +28,26 @@ def load_fixtures(division: str = "SP1", manual: Path | None = None, days_ahead:
         df = pd.read_csv(manual)
         df["date"] = pd.to_datetime(df["date"], dayfirst=True)
     else:
-        fd = pd.read_csv(FIXTURES_URL, encoding="utf-8-sig", encoding_errors="replace")
-        fd = fd[fd["Div"] == division].rename(columns={
-            "Date": "date", "HomeTeam": "home", "AwayTeam": "away",
-            "AvgH": "odds_home", "AvgD": "odds_draw", "AvgA": "odds_away"})
-        fd["date"] = pd.to_datetime(fd["date"], dayfirst=True)
-        df = merge_fixtures(fd, load_fixturedownload())
+        # Cada fonte pode falhar sozinha; só se as duas falharem é que não há calendário.
+        sources, errors = [], []
+        try:
+            fd = pd.read_csv(FIXTURES_URL, encoding="utf-8-sig", encoding_errors="replace")
+            fd = fd[fd["Div"] == division].rename(columns={
+                "Date": "date", "HomeTeam": "home", "AwayTeam": "away",
+                "AvgH": "odds_home", "AvgD": "odds_draw", "AvgA": "odds_away"})
+            fd["date"] = pd.to_datetime(fd["date"], dayfirst=True)
+            sources.append(fd)
+        except Exception as e:
+            errors.append(f"football-data.co.uk: {e}")
+        try:
+            sources.append(load_fixturedownload())
+        except Exception as e:
+            errors.append(f"fixturedownload.com: {e}")
+        if not sources:
+            raise RuntimeError("Nenhuma fonte de calendário respondeu: " + "; ".join(errors))
+        for err in errors:
+            print(f"Aviso: sem calendário de {err}", file=sys.stderr)
+        df = sources[0] if len(sources) == 1 else merge_fixtures(sources[0], sources[1])
     df = df[(df["date"] >= today) & (df["date"] <= today + pd.Timedelta(days=days_ahead))]
     cols = [c for c in ["date", "home", "away", "odds_home", "odds_draw", "odds_away"] if c in df.columns]
     return df[cols].sort_values("date").reset_index(drop=True)

@@ -3,6 +3,7 @@
 Uso: .venv/bin/python scripts/simulate_season.py [n_sims]
 """
 
+import math
 import sys
 from datetime import date
 from pathlib import Path
@@ -65,11 +66,13 @@ if __name__ == "__main__":
     history = pd.read_csv(HISTORY) if HISTORY.exists() else pd.DataFrame()
     # Um ponto por jornada: enquanto os jogos da mesma jornada vão terminando, o ponto
     # dessa jornada é atualizado; sem jogos novos, o histórico fica como está.
-    matchday = round(len(played) / 10)
+    # Jornada em curso: com 83 jogos, a 9.ª jornada já começou (arredondar para cima;
+    # arredondar ao mais próximo dava 8 e apagava o ponto da 8.ª jornada).
+    matchday = math.ceil(len(played) / 10)
     if not history.empty and (history["games_played"] == len(played)).any():
         print(f"\nHistórico sem alterações: ainda não há jogos novos desde {entry['data_until'].iloc[0]}.")
     else:
         if not history.empty:
-            history = history[(history["games_played"] / 10).round() != matchday]
+            history = history[(history["games_played"] / 10).apply(math.ceil) != matchday]
         pd.concat([history, entry], ignore_index=True).to_csv(HISTORY, index=False)
         print(f"\nHistórico atualizado ({matchday}.ª jornada): {HISTORY.relative_to(ROOT)}")

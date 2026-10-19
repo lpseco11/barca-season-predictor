@@ -42,3 +42,21 @@ def test_add_missing_results_only_fills_gaps():
     new = out[out["home"] == "Barcelona"].iloc[0]
     assert (new["home_goals"], new["away_goals"], new["source"]) == (3, 0, "fixturedownload")
     assert pd.isna(new["home_xg"])
+
+
+def test_download_falls_back_to_saved_copy(tmp_path, monkeypatch):
+    import requests
+
+    from barca import data
+
+    saved = tmp_path / "SP1_2627.csv"
+    saved.write_text("copia de ontem")
+    monkeypatch.setattr(data, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(data.time, "sleep", lambda s: None)
+
+    def offline(*args, **kwargs):
+        raise requests.exceptions.ReadTimeout("site em baixo")
+
+    monkeypatch.setattr(data.requests, "get", offline)
+    assert data.download("2627", "SP1") == saved
+    assert saved.read_text() == "copia de ontem"

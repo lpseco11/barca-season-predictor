@@ -7,6 +7,7 @@ Uso: .venv/bin/python scripts/build_site.py
 """
 
 import json
+import math
 from pathlib import Path
 
 import numpy as np
@@ -206,7 +207,7 @@ if __name__ == "__main__":
         "updated": last_update(played),
         "data_until": played["date"].max().strftime("%Y-%m-%d"),
         "games_played": int(len(played)),
-        "matchday": int(round(len(played) / 10)),
+        "matchday": math.ceil(len(played) / 10),  # jornada em curso ou acabada de jogar
         "title": [{"team": name(t), "barca": t == TEAM, "p": round(p, 4)} for t, p in champions.items()],
         "barca": {
             "exp_points": round(pts.mean(), 1), "p5": float(np.percentile(pts, 5)), "p95": float(np.percentile(pts, 95)),
